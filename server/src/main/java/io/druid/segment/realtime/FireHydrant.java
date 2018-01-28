@@ -141,9 +141,8 @@ public class FireHydrant
   @Override
   public String toString()
   {
-    // Do not include IncrementalIndex in toString as AbstractIndex.toString() actually prints
-    // all the rows in the index
     return "FireHydrant{" +
+           "index=" + index +
            ", queryable=" + adapter.get().getIdentifier() +
            ", count=" + count +
            '}';

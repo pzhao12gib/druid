@@ -20,7 +20,7 @@
 package io.druid.emitter.graphite;
 
 import com.google.common.collect.Maps;
-import io.druid.java.util.emitter.service.ServiceMetricEvent;
+import com.metamx.emitter.service.ServiceMetricEvent;
 import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.DateTimes;
 import junitparams.JUnitParamsRunner;
@@ -36,8 +36,8 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class WhiteListBasedConverterTest
 {
-  private final String prefix = "druid";
-  private final WhiteListBasedConverter defaultWhiteListBasedConverter = new WhiteListBasedConverter(
+  final private String prefix = "druid";
+  final private WhiteListBasedConverter defaultWhiteListBasedConverter = new WhiteListBasedConverter(
       prefix,
       false,
       false,

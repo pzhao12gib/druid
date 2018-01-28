@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
  */
 class TestDimensionSelector implements DimensionSelector
 {
-  public static final TestDimensionSelector instance = new TestDimensionSelector();
+  public final static TestDimensionSelector instance = new TestDimensionSelector();
 
   private TestDimensionSelector()
   {
@@ -47,7 +47,7 @@ class TestDimensionSelector implements DimensionSelector
   @Override
   public IndexedInts getRow()
   {
-    return new ArrayBasedIndexedInts(new int[]{2, 4, 6});
+    return ArrayBasedIndexedInts.of(new int[]{2, 4, 6});
   }
 
   @Override

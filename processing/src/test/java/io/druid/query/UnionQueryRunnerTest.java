@@ -20,6 +20,7 @@
 package io.druid.query;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.druid.java.util.common.guava.Sequence;
 import io.druid.java.util.common.guava.Sequences;
@@ -70,7 +71,7 @@ public class UnionQueryRunnerTest
                     .build();
     Map<String, Object> responseContext = Maps.newHashMap();
     Sequence<?> result = runner.run(QueryPlus.wrap(q), responseContext);
-    List res = result.toList();
+    List res = Sequences.toList(result, Lists.newArrayList());
     Assert.assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), res);
 
     // verify response context

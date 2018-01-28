@@ -34,7 +34,7 @@ import java.util.PriorityQueue;
 
 public class ImmutableConciseSet
 {
-  private static final int CHUNK_SIZE = 10000;
+  private final static int CHUNK_SIZE = 10000;
 
   private static final Comparator<WordIterator> UNION_COMPARATOR = new Comparator<WordIterator>()
   {

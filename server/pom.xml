@@ -26,7 +26,7 @@
     <parent>
         <groupId>io.druid</groupId>
         <artifactId>druid</artifactId>
-        <version>0.12.0-SNAPSHOT</version>
+        <version>0.11.1-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -46,9 +46,8 @@
             <version>0.0.2</version>
         </dependency>
         <dependency>
-            <groupId>io.druid</groupId>
+            <groupId>com.metamx</groupId>
             <artifactId>java-util</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>

@@ -21,8 +21,8 @@ package io.druid.benchmark;
 
 import com.google.common.base.Supplier;
 import com.google.common.io.Files;
-import io.druid.segment.data.ColumnarLongs;
-import io.druid.segment.data.CompressedColumnarLongsSupplier;
+import io.druid.segment.data.CompressedLongsIndexedSupplier;
+import io.druid.segment.data.IndexedLongs;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -66,7 +66,7 @@ public class LongCompressionBenchmark
   private static String strategy;
 
   private Random rand;
-  private Supplier<ColumnarLongs> supplier;
+  private Supplier<IndexedLongs> supplier;
 
   @Setup
   public void setup() throws Exception
@@ -75,33 +75,33 @@ public class LongCompressionBenchmark
     File compFile = new File(dir, file + "-" + strategy + "-" + format);
     rand = new Random();
     ByteBuffer buffer = Files.map(compFile);
-    supplier = CompressedColumnarLongsSupplier.fromByteBuffer(buffer, ByteOrder.nativeOrder());
+    supplier = CompressedLongsIndexedSupplier.fromByteBuffer(buffer, ByteOrder.nativeOrder(), null);
   }
 
   @Benchmark
   public void readContinuous(Blackhole bh) throws IOException
   {
-    ColumnarLongs columnarLongs = supplier.get();
-    int count = columnarLongs.size();
+    IndexedLongs indexedLongs = supplier.get();
+    int count = indexedLongs.size();
     long sum = 0;
     for (int i = 0; i < count; i++) {
-      sum += columnarLongs.get(i);
+      sum += indexedLongs.get(i);
     }
     bh.consume(sum);
-    columnarLongs.close();
+    indexedLongs.close();
   }
 
   @Benchmark
   public void readSkipping(Blackhole bh) throws IOException
   {
-    ColumnarLongs columnarLongs = supplier.get();
-    int count = columnarLongs.size();
+    IndexedLongs indexedLongs = supplier.get();
+    int count = indexedLongs.size();
     long sum = 0;
     for (int i = 0; i < count; i += rand.nextInt(2000)) {
-      sum += columnarLongs.get(i);
+      sum += indexedLongs.get(i);
     }
     bh.consume(sum);
-    columnarLongs.close();
+    indexedLongs.close();
   }
 
 }

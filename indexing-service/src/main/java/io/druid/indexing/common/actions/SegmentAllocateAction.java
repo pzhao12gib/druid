@@ -66,7 +66,6 @@ public class SegmentAllocateAction implements TaskAction<SegmentIdentifier>
   private final Granularity preferredSegmentGranularity;
   private final String sequenceName;
   private final String previousSegmentId;
-  private final boolean skipSegmentLineageCheck;
 
   public SegmentAllocateAction(
       @JsonProperty("dataSource") String dataSource,
@@ -74,8 +73,7 @@ public class SegmentAllocateAction implements TaskAction<SegmentIdentifier>
       @JsonProperty("queryGranularity") Granularity queryGranularity,
       @JsonProperty("preferredSegmentGranularity") Granularity preferredSegmentGranularity,
       @JsonProperty("sequenceName") String sequenceName,
-      @JsonProperty("previousSegmentId") String previousSegmentId,
-      @JsonProperty("skipSegmentLineageCheck") boolean skipSegmentLineageCheck
+      @JsonProperty("previousSegmentId") String previousSegmentId
   )
   {
     this.dataSource = Preconditions.checkNotNull(dataSource, "dataSource");
@@ -87,7 +85,6 @@ public class SegmentAllocateAction implements TaskAction<SegmentIdentifier>
     );
     this.sequenceName = Preconditions.checkNotNull(sequenceName, "sequenceName");
     this.previousSegmentId = previousSegmentId;
-    this.skipSegmentLineageCheck = skipSegmentLineageCheck;
   }
 
   @JsonProperty
@@ -124,12 +121,6 @@ public class SegmentAllocateAction implements TaskAction<SegmentIdentifier>
   public String getPreviousSegmentId()
   {
     return previousSegmentId;
-  }
-
-  @JsonProperty
-  public boolean isSkipSegmentLineageCheck()
-  {
-    return skipSegmentLineageCheck;
   }
 
   @Override
@@ -211,8 +202,11 @@ public class SegmentAllocateAction implements TaskAction<SegmentIdentifier>
     }
   }
 
-  private SegmentIdentifier tryAllocateFirstSegment(TaskActionToolbox toolbox, Task task, Interval rowInterval)
-      throws IOException
+  private SegmentIdentifier tryAllocateFirstSegment(
+      TaskActionToolbox toolbox,
+      Task task,
+      Interval rowInterval
+  ) throws IOException
   {
     // No existing segments for this row, but there might still be nearby ones that conflict with our preferred
     // segment granularity. Try that first, and then progressively smaller ones if it fails.
@@ -274,8 +268,7 @@ public class SegmentAllocateAction implements TaskAction<SegmentIdentifier>
           sequenceName,
           previousSegmentId,
           tryInterval,
-          lockResult.getTaskLock().getVersion(),
-          skipSegmentLineageCheck
+          lockResult.getTaskLock().getVersion()
       );
       if (identifier != null) {
         return identifier;
@@ -323,7 +316,6 @@ public class SegmentAllocateAction implements TaskAction<SegmentIdentifier>
            ", preferredSegmentGranularity=" + preferredSegmentGranularity +
            ", sequenceName='" + sequenceName + '\'' +
            ", previousSegmentId='" + previousSegmentId + '\'' +
-           ", skipSegmentLineageCheck='" + skipSegmentLineageCheck + '\'' +
            '}';
   }
 }

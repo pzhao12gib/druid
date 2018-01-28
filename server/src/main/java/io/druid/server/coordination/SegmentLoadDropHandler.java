@@ -35,7 +35,7 @@ import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
 import io.druid.guice.ManageLifecycle;
 import io.druid.java.util.common.ISE;
 import io.druid.java.util.common.concurrent.Execs;
@@ -376,13 +376,12 @@ public class SegmentLoadDropHandler implements DataSegmentChangeHandler
 
         if (failedSegments.size() > 0) {
           log.makeAlert("%,d errors seen while loading segments", failedSegments.size())
-             .addData("failedSegments", failedSegments)
-             .emit();
+             .addData("failedSegments", failedSegments);
         }
       }
       catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        log.makeAlert(e, "LoadingInterrupted").emit();
+        log.makeAlert(e, "LoadingInterrupted");
       }
 
       backgroundSegmentAnnouncer.finishAnnouncing();
@@ -753,8 +752,8 @@ public class SegmentLoadDropHandler implements DataSegmentChangeHandler
     private final STATE state;
     private final String failureCause;
 
-    public static final Status SUCCESS = new Status(STATE.SUCCESS, null);
-    public static final Status PENDING = new Status(STATE.PENDING, null);
+    public final static Status SUCCESS = new Status(STATE.SUCCESS, null);
+    public final static Status PENDING = new Status(STATE.PENDING, null);
 
     @JsonCreator
     Status(

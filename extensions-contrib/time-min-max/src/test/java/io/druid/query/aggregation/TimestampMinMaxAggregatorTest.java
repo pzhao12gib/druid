@@ -134,13 +134,15 @@ public class TimestampMinMaxAggregatorTest
   {
     TimestampAggregator aggregator = (TimestampAggregator) aggregatorFactory.factorize(selectorFactory);
 
-    Assert.assertEquals(initValue, aggregator.get());
-
-    for (Timestamp value : values) {
+    for (Timestamp value: values) {
       aggregate(selector, aggregator);
     }
 
     Assert.assertEquals(expected, new Timestamp(aggregator.getLong()));
+
+    aggregator.reset();
+
+    Assert.assertEquals(initValue, aggregator.get());
   }
 
   @Test
@@ -151,7 +153,7 @@ public class TimestampMinMaxAggregatorTest
     ByteBuffer buffer = ByteBuffer.wrap(new byte[Longs.BYTES]);
     aggregator.init(buffer, 0);
 
-    for (Timestamp value : values) {
+    for (Timestamp value: values) {
       aggregate(selector, aggregator, buffer, 0);
     }
 

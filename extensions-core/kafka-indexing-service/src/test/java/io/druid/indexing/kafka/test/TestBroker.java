@@ -44,7 +44,7 @@ import java.util.Random;
 
 public class TestBroker implements Closeable
 {
-  private static final Random RANDOM = new Random();
+  private final static Random RANDOM = new Random();
 
   private final String zookeeperConnect;
   private final File directory;

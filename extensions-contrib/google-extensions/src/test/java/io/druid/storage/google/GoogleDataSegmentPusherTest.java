@@ -103,30 +103,20 @@ public class GoogleDataSegmentPusherTest extends EasyMockSupport
         storage,
         googleAccountConfig,
          jsonMapper
-    ).addMockedMethod("insert", File.class, String.class, String.class, boolean.class).createMock();
+    ).addMockedMethod("insert", File.class, String.class, String.class).createMock();
 
     final String storageDir = pusher.getStorageDir(segmentToPush);
     final String indexPath = prefix + "/" + storageDir + "/" + "index.zip";
     final String descriptorPath = prefix + "/" + storageDir + "/" + "descriptor.json";
 
-    pusher.insert(
-        EasyMock.anyObject(File.class),
-        EasyMock.eq("application/zip"),
-        EasyMock.eq(indexPath),
-        EasyMock.eq(true)
-    );
+    pusher.insert(EasyMock.anyObject(File.class), EasyMock.eq("application/zip"), EasyMock.eq(indexPath));
     expectLastCall();
-    pusher.insert(
-        EasyMock.anyObject(File.class),
-        EasyMock.eq("application/json"),
-        EasyMock.eq(descriptorPath),
-        EasyMock.eq(true)
-    );
+    pusher.insert(EasyMock.anyObject(File.class), EasyMock.eq("application/json"), EasyMock.eq(descriptorPath));
     expectLastCall();
 
     replayAll();
 
-    DataSegment segment = pusher.push(tempFolder.getRoot(), segmentToPush, true);
+    DataSegment segment = pusher.push(tempFolder.getRoot(), segmentToPush);
 
     Assert.assertEquals(segmentToPush.getSize(), segment.getSize());
     Assert.assertEquals(segmentToPush, segment);

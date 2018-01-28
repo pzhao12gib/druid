@@ -32,7 +32,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.CountingInputStream;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
 import io.druid.java.util.common.concurrent.Execs;
 import io.druid.data.input.Firehose;
 import io.druid.data.input.FirehoseFactory;
@@ -228,7 +228,7 @@ public class EventReceiverFirehoseFactory implements FirehoseFactory<InputRowPar
       final List<InputRow> rows = Lists.newArrayList();
       for (final Map<String, Object> event : events) {
         // Might throw an exception. We'd like that to happen now, instead of while adding to the row buffer.
-        rows.addAll(parser.parseBatch(event));
+        rows.add(parser.parse(event));
       }
 
       try {

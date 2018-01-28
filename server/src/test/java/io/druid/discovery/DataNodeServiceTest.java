@@ -39,7 +39,7 @@ public class DataNodeServiceTest
         1
     );
 
-    ObjectMapper mapper = TestHelper.makeJsonMapper();
+    ObjectMapper mapper = TestHelper.getJsonMapper();
     DruidService actual = mapper.readValue(
         mapper.writeValueAsString(expected),
         DruidService.class

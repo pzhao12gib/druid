@@ -27,11 +27,11 @@ import java.util.Arrays;
 
 public class HistogramVisual
 {
-  @JsonProperty public final double[] breaks;
+  @JsonProperty final public double[] breaks;
   @JsonProperty
-  public final double[] counts;
+  final public double[] counts;
   // an array of the quantiles including the min. and max.
-  @JsonProperty public final double[] quantiles;
+  @JsonProperty final public double[] quantiles;
 
   @JsonCreator
   public HistogramVisual(

@@ -34,6 +34,7 @@ import io.druid.data.input.Row;
 import io.druid.java.util.common.DateTimes;
 import io.druid.java.util.common.granularity.Granularities;
 import io.druid.java.util.common.guava.Sequence;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.query.aggregation.AggregationTestHelper;
 import io.druid.query.aggregation.AggregatorFactory;
 import io.druid.query.aggregation.PostAggregator;
@@ -101,7 +102,7 @@ public class SketchAggregationTest
         readFileFromClasspathAsString("sketch_test_data_group_by_query.json")
     );
 
-    List<Row> results = seq.toList();
+    List<Row> results = Sequences.toList(seq, Lists.<Row>newArrayList());
     Assert.assertEquals(1, results.size());
     Assert.assertEquals(
         new MapBasedRow(
@@ -142,7 +143,7 @@ public class SketchAggregationTest
         readFileFromClasspathAsString("simple_test_data_group_by_query.json")
     );
 
-    List<Row> results = seq.toList();
+    List<Row> results = Sequences.toList(seq, Lists.<Row>newArrayList());
     Assert.assertEquals(5, results.size());
     Assert.assertEquals(
         ImmutableList.of(
@@ -340,7 +341,7 @@ public class SketchAggregationTest
         readFileFromClasspathAsString("retention_test_data_group_by_query.json")
     );
 
-    List<Row> results = seq.toList();
+    List<Row> results = Sequences.toList(seq, Lists.<Row>newArrayList());
     Assert.assertEquals(1, results.size());
     Assert.assertEquals(
         ImmutableList.of(
@@ -419,7 +420,7 @@ public class SketchAggregationTest
     );
   }
 
-  public static final String readFileFromClasspathAsString(String fileName) throws IOException
+  public final static String readFileFromClasspathAsString(String fileName) throws IOException
   {
     return Files.asCharSource(
         new File(SketchAggregationTest.class.getClassLoader().getResource(fileName).getFile()),

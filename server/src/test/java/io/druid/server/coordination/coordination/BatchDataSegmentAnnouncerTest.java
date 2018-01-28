@@ -30,13 +30,12 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.druid.curator.PotentiallyGzippedCompressionProvider;
 import io.druid.curator.announcement.Announcer;
+import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.DateTimes;
-import io.druid.segment.TestHelper;
 import io.druid.server.coordination.BatchDataSegmentAnnouncer;
-import io.druid.server.coordination.DataSegmentChangeRequest;
 import io.druid.server.coordination.DruidServerMetadata;
-import io.druid.server.coordination.ChangeRequestHistory;
-import io.druid.server.coordination.ChangeRequestsSnapshot;
+import io.druid.server.coordination.SegmentChangeRequestHistory;
+import io.druid.server.coordination.SegmentChangeRequestsSnapshot;
 import io.druid.server.coordination.ServerType;
 import io.druid.server.initialization.BatchDataSegmentAnnouncerConfig;
 import io.druid.server.initialization.ZkPathsConfig;
@@ -92,7 +91,7 @@ public class BatchDataSegmentAnnouncerTest
     cf.blockUntilConnected();
     cf.create().creatingParentsIfNeeded().forPath(testBasePath);
 
-    jsonMapper = TestHelper.makeJsonMapper();
+    jsonMapper = new DefaultObjectMapper();
 
     announcer = new Announcer(
         cf,
@@ -188,8 +187,8 @@ public class BatchDataSegmentAnnouncerTest
       Assert.assertEquals(Sets.newHashSet(firstSegment, secondSegment), segments);
     }
 
-    ChangeRequestsSnapshot<DataSegmentChangeRequest> snapshot = segmentAnnouncer.getSegmentChangesSince(
-        new ChangeRequestHistory.Counter(-1, -1)
+    SegmentChangeRequestsSnapshot snapshot = segmentAnnouncer.getSegmentChangesSince(
+        new SegmentChangeRequestHistory.Counter(-1, -1)
     ).get();
     Assert.assertEquals(2, snapshot.getRequests().size());
     Assert.assertEquals(2, snapshot.getCounter().getCounter());
@@ -212,7 +211,7 @@ public class BatchDataSegmentAnnouncerTest
     Assert.assertEquals(4, snapshot.getCounter().getCounter());
 
     snapshot = segmentAnnouncer.getSegmentChangesSince(
-        new ChangeRequestHistory.Counter(-1, -1)
+        new SegmentChangeRequestHistory.Counter(-1, -1)
     ).get();
     Assert.assertEquals(0, snapshot.getRequests().size());
     Assert.assertEquals(4, snapshot.getCounter().getCounter());
@@ -311,11 +310,11 @@ public class BatchDataSegmentAnnouncerTest
     }
     Assert.assertEquals(allSegments, testSegments);
 
-    ChangeRequestsSnapshot<DataSegmentChangeRequest> snapshot = null;
+    SegmentChangeRequestsSnapshot snapshot = null;
 
     if (testHistory) {
       snapshot = segmentAnnouncer.getSegmentChangesSince(
-          new ChangeRequestHistory.Counter(-1, -1)
+          new SegmentChangeRequestHistory.Counter(-1, -1)
       ).get();
       Assert.assertEquals(testSegments.size(), snapshot.getRequests().size());
       Assert.assertEquals(testSegments.size(), snapshot.getCounter().getCounter());
@@ -333,7 +332,7 @@ public class BatchDataSegmentAnnouncerTest
       Assert.assertEquals(2 * testSegments.size(), snapshot.getCounter().getCounter());
 
       snapshot = segmentAnnouncer.getSegmentChangesSince(
-          new ChangeRequestHistory.Counter(-1, -1)
+          new SegmentChangeRequestHistory.Counter(-1, -1)
       ).get();
       Assert.assertEquals(0, snapshot.getRequests().size());
       Assert.assertEquals(2 * testSegments.size(), snapshot.getCounter().getCounter());

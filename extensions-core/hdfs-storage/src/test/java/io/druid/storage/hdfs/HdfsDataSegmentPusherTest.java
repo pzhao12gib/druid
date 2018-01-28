@@ -92,10 +92,7 @@ public class HdfsDataSegmentPusherTest
   }
   static {
     objectMapper = new TestObjectMapper();
-    InjectableValues.Std injectableValues = new InjectableValues.Std();
-    injectableValues.addValue(ObjectMapper.class, objectMapper);
-    injectableValues.addValue(DataSegment.PruneLoadSpecHolder.class, DataSegment.PruneLoadSpecHolder.DEFAULT);
-    objectMapper.setInjectableValues(injectableValues);
+    objectMapper.setInjectableValues(new InjectableValues.Std().addValue(ObjectMapper.class, objectMapper));
   }
 
   @Test
@@ -161,7 +158,7 @@ public class HdfsDataSegmentPusherTest
         size
     );
 
-    DataSegment segment = pusher.push(segmentDir, segmentToPush, true);
+    DataSegment segment = pusher.push(segmentDir, segmentToPush);
 
 
     String indexUri = StringUtils.format(
@@ -201,7 +198,7 @@ public class HdfsDataSegmentPusherTest
     File outDir = new File(StringUtils.format("%s/%s", config.getStorageDirectory(), segmentPath));
     outDir.setReadOnly();
     try {
-      pusher.push(segmentDir, segmentToPush, true);
+      pusher.push(segmentDir, segmentToPush);
     }
     catch (IOException e) {
       Assert.fail("should not throw exception");
@@ -246,7 +243,7 @@ public class HdfsDataSegmentPusherTest
     }
 
     for (int i = 0; i < numberOfSegments; i++) {
-      final DataSegment pushedSegment = pusher.push(segmentDir, segments[i], true);
+      final DataSegment pushedSegment = pusher.push(segmentDir, segments[i]);
 
       String indexUri = StringUtils.format(
           "%s/%s/%d_index.zip",
@@ -308,7 +305,7 @@ public class HdfsDataSegmentPusherTest
       File outDir = new File(StringUtils.format("%s/%s", config.getStorageDirectory(), segmentPath));
       outDir.setReadOnly();
       try {
-        pusher.push(segmentDir, segments[i], true);
+        pusher.push(segmentDir, segments[i]);
       }
       catch (IOException e) {
         Assert.fail("should not throw exception");

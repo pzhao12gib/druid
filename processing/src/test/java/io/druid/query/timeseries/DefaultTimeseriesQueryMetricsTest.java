@@ -19,7 +19,7 @@
 
 package io.druid.query.timeseries;
 
-import io.druid.java.util.emitter.service.ServiceEmitter;
+import com.metamx.emitter.service.ServiceEmitter;
 import io.druid.query.CachingEmitter;
 import io.druid.query.DefaultQueryMetricsTest;
 import io.druid.query.DruidMetrics;
@@ -46,7 +46,7 @@ public class DefaultTimeseriesQueryMetricsTest
   {
     CachingEmitter cachingEmitter = new CachingEmitter();
     ServiceEmitter serviceEmitter = new ServiceEmitter("", "", cachingEmitter);
-    DefaultTimeseriesQueryMetrics queryMetrics = new DefaultTimeseriesQueryMetrics(TestHelper.makeJsonMapper());
+    DefaultTimeseriesQueryMetrics queryMetrics = new DefaultTimeseriesQueryMetrics(TestHelper.getJsonMapper());
     TimeseriesQuery query = Druids
         .newTimeseriesQueryBuilder()
         .dataSource(QueryRunnerTestHelper.dataSource)
@@ -89,7 +89,7 @@ public class DefaultTimeseriesQueryMetricsTest
   {
     CachingEmitter cachingEmitter = new CachingEmitter();
     ServiceEmitter serviceEmitter = new ServiceEmitter("", "", cachingEmitter);
-    DefaultTimeseriesQueryMetrics queryMetrics = new DefaultTimeseriesQueryMetrics(TestHelper.makeJsonMapper());
+    DefaultTimeseriesQueryMetrics queryMetrics = new DefaultTimeseriesQueryMetrics(TestHelper.getJsonMapper());
     DefaultQueryMetricsTest.testQueryMetricsDefaultMetricNamesAndUnits(cachingEmitter, serviceEmitter, queryMetrics);
   }
 }

@@ -48,6 +48,7 @@ import io.druid.segment.incremental.IncrementalIndex;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -116,7 +117,7 @@ public class GroupByQueryRunnerFactoryTest
         GroupByQueryRunnerTestHelper.createExpectedRow("1970-01-01T00:00:00.000Z", "tags", "t2", "count", 4L)
     );
 
-    TestHelper.assertExpectedObjects(expectedResults, result.toList(), "");
+    TestHelper.assertExpectedObjects(expectedResults, Sequences.toList(result, new ArrayList<Row>()), "");
   }
 
   private Segment createSegment() throws Exception

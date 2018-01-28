@@ -35,14 +35,15 @@ import io.druid.collections.BlockingPool;
 import io.druid.collections.DefaultBlockingPool;
 import io.druid.collections.NonBlockingPool;
 import io.druid.collections.StupidPool;
+import io.druid.java.util.common.concurrent.Execs;
 import io.druid.data.input.InputRow;
 import io.druid.data.input.Row;
 import io.druid.hll.HyperLogLogHash;
 import io.druid.jackson.DefaultObjectMapper;
-import io.druid.java.util.common.concurrent.Execs;
 import io.druid.java.util.common.granularity.Granularities;
 import io.druid.java.util.common.granularity.Granularity;
 import io.druid.java.util.common.guava.Sequence;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.java.util.common.logger.Logger;
 import io.druid.offheap.OffheapBufferGenerator;
 import io.druid.query.DruidProcessingConfig;
@@ -75,7 +76,6 @@ import io.druid.segment.QueryableIndexSegment;
 import io.druid.segment.column.ColumnConfig;
 import io.druid.segment.incremental.IncrementalIndex;
 import io.druid.segment.serde.ComplexMetrics;
-import io.druid.segment.writeout.OffHeapMemorySegmentWriteOutMediumFactory;
 import org.apache.commons.io.FileUtils;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -103,9 +103,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Benchmark for determining the interface overhead of GroupBy with multiple type implementations
- */
+// Benchmark for determining the interface overhead of GroupBy with multiple type implementations
+
 @State(Scope.Benchmark)
 @Fork(value = 1)
 @Warmup(iterations = 15)
@@ -154,7 +153,6 @@ public class GroupByTypeInterfaceBenchmark
     JSON_MAPPER = new DefaultObjectMapper();
     INDEX_IO = new IndexIO(
         JSON_MAPPER,
-        OffHeapMemorySegmentWriteOutMediumFactory.instance(),
         new ColumnConfig()
         {
           @Override
@@ -164,7 +162,7 @@ public class GroupByTypeInterfaceBenchmark
           }
         }
     );
-    INDEX_MERGER_V9 = new IndexMergerV9(JSON_MAPPER, INDEX_IO, OffHeapMemorySegmentWriteOutMediumFactory.instance());
+    INDEX_MERGER_V9 = new IndexMergerV9(JSON_MAPPER, INDEX_IO);
   }
 
   private static final Map<String, Map<String, GroupByQuery>> SCHEMA_QUERY_MAP = new LinkedHashMap<>();
@@ -341,8 +339,7 @@ public class GroupByTypeInterfaceBenchmark
       final File file = INDEX_MERGER_V9.persist(
           index,
           new File(tmpDir, String.valueOf(i)),
-          new IndexSpec(),
-          null
+          new IndexSpec()
       );
 
       queryableIndexes.add(INDEX_IO.loadIndex(file));
@@ -477,7 +474,7 @@ public class GroupByTypeInterfaceBenchmark
     );
 
     Sequence<T> queryResult = theRunner.run(QueryPlus.wrap(query), Maps.newHashMap());
-    return queryResult.toList();
+    return Sequences.toList(queryResult, Lists.<T>newArrayList());
   }
 
   @Benchmark

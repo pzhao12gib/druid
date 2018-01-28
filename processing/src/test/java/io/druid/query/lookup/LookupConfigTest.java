@@ -31,7 +31,7 @@ import java.io.IOException;
 public class LookupConfigTest
 {
 
-  ObjectMapper mapper = TestHelper.makeJsonMapper();
+  ObjectMapper mapper = TestHelper.getJsonMapper();
   @Rule
   public TemporaryFolder temporaryFolder = new TemporaryFolder();
 

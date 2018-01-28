@@ -21,15 +21,15 @@ package io.druid.segment.serde;
 
 import com.google.common.base.Supplier;
 import io.druid.segment.column.GenericColumn;
-import io.druid.segment.column.DoublesColumn;
-import io.druid.segment.data.ColumnarDoubles;
+import io.druid.segment.column.IndexedDoublesGenericColumn;
+import io.druid.segment.data.IndexedDoubles;
 
 
 public class DoubleGenericColumnSupplier implements Supplier<GenericColumn>
 {
-  private final Supplier<ColumnarDoubles> column;
+  private final Supplier<IndexedDoubles> column;
 
-  public DoubleGenericColumnSupplier(Supplier<ColumnarDoubles> column)
+  public DoubleGenericColumnSupplier(Supplier<IndexedDoubles> column)
   {
     this.column = column;
   }
@@ -37,6 +37,6 @@ public class DoubleGenericColumnSupplier implements Supplier<GenericColumn>
   @Override
   public GenericColumn get()
   {
-    return new DoublesColumn(column.get());
+    return new IndexedDoublesGenericColumn(column.get());
   }
 }

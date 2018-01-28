@@ -31,7 +31,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
 import io.druid.indexing.common.TaskLock;
 import io.druid.indexing.common.TaskLockType;
 import io.druid.indexing.common.task.Task;
@@ -863,8 +863,8 @@ public class TaskLockbox
 
   static class TaskLockPosse
   {
-    private final TaskLock taskLock;
-    private final Set<String> taskIds;
+    final private TaskLock taskLock;
+    final private Set<String> taskIds;
 
     TaskLockPosse(TaskLock taskLock)
     {

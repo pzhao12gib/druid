@@ -26,6 +26,7 @@ import io.druid.collections.StupidPool;
 import io.druid.data.input.MapBasedInputRow;
 import io.druid.java.util.common.DateTimes;
 import io.druid.java.util.common.granularity.Granularities;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.query.QueryRunnerTestHelper;
 import io.druid.query.Result;
 import io.druid.query.aggregation.CountAggregatorFactory;
@@ -116,8 +117,10 @@ public class DistinctCountTopNQueryTest
                           )
                           .build();
 
-    final Iterable<Result<TopNResultValue>> results =
-        engine.query(query, new IncrementalIndexStorageAdapter(index), null).toList();
+    final Iterable<Result<TopNResultValue>> results = Sequences.toList(
+        engine.query(query, new IncrementalIndexStorageAdapter(index), null),
+        Lists.<Result<TopNResultValue>>newLinkedList()
+    );
 
     List<Result<TopNResultValue>> expectedResults = Collections.singletonList(
         new Result<>(

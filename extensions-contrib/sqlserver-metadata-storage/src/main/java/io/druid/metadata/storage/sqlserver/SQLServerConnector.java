@@ -69,10 +69,11 @@ public class SQLServerConnector extends SQLMetadataConnector
    * </blockquote>
    * <p>
    *
-   * See also PostgreSQLConnector and MySQLConnector in corresponding modules in Druid.
-   *
    * @see <a href="https://msdn.microsoft.com/en-CA/library/ms187745.aspx">MS
    *      SQL Server Numeric Types</a>
+   * @see io.druid.metadata.storage.postgresql.PostgreSQLConnector
+   * @see io.druid.metadata.storage.mysql.MySQLConnector
+   *
    */
   private static final String PAYLOAD_TYPE = "VARBINARY(MAX)";
 
@@ -99,9 +100,12 @@ public class SQLServerConnector extends SQLMetadataConnector
    * </blockquote>
    * <p>
    *
-   * See also PostgreSQLConnector and MySQLConnector in corresponding modules in Druid.
-   *
    * @see <a href="https://msdn.microsoft.com/en-CA/library/ms187745.aspx">MS SQL Server Numeric Types</a>
+   * @see io.druid.metadata.storage.postgresql.PostgreSQLConnector
+   * @see io.druid.metadata.storage.mysql.MySQLConnector
+   *
+   *
+   *
    */
   private static final String SERIAL_TYPE = "[bigint] IDENTITY (1, 1)";
 

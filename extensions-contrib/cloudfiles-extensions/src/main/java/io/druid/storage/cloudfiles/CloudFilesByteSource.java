@@ -29,8 +29,8 @@ import java.io.InputStream;
 public class CloudFilesByteSource extends ByteSource
 {
 
-  private final CloudFilesObjectApiProxy objectApi;
-  private final String path;
+  final private CloudFilesObjectApiProxy objectApi;
+  final private String path;
   private Payload payload;
 
   public CloudFilesByteSource(CloudFilesObjectApiProxy objectApi, String path)
@@ -51,12 +51,7 @@ public class CloudFilesByteSource extends ByteSource
   @Override
   public InputStream openStream() throws IOException
   {
-    return openStream(0);
-  }
-
-  public InputStream openStream(long start) throws IOException
-  {
-    payload = (payload == null) ? objectApi.get(path, start).getPayload() : payload;
+    payload = (payload == null) ? objectApi.get(path).getPayload() : payload;
 
     try {
       return payload.openStream();

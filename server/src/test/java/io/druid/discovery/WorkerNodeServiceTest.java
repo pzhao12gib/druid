@@ -37,7 +37,7 @@ public class WorkerNodeServiceTest
         "v1"
     );
 
-    ObjectMapper mapper = TestHelper.makeJsonMapper();
+    ObjectMapper mapper = TestHelper.getJsonMapper();
     DruidService actual = mapper.readValue(
         mapper.writeValueAsString(expected),
         DruidService.class

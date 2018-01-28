@@ -94,13 +94,10 @@ public class JsonConfiguratorTest
   public void testTest()
   {
     Assert.assertEquals(
-        new MappableObject("p1", ImmutableList.<String>of("p2"), "p2"),
-        new MappableObject("p1", ImmutableList.<String>of("p2"), "p2")
+        new MappableObject("p1", ImmutableList.<String>of("p2")),
+        new MappableObject("p1", ImmutableList.<String>of("p2"))
     );
-    Assert.assertEquals(
-        new MappableObject("p1", null, null),
-        new MappableObject("p1", ImmutableList.<String>of(), null)
-    );
+    Assert.assertEquals(new MappableObject("p1", null), new MappableObject("p1", ImmutableList.<String>of()));
   }
 
   @Test
@@ -143,19 +140,6 @@ public class JsonConfiguratorTest
     Assert.assertEquals("testing \"prop1\"", obj.prop1);
     Assert.assertEquals(ImmutableList.of(), obj.prop1List);
   }
-
-  @Test
-  public void testPropertyWithDot()
-  {
-    final JsonConfigurator configurator = new JsonConfigurator(mapper, validator);
-    properties.setProperty(PROP_PREFIX + "prop2.prop.2", "testing");
-    properties.setProperty(PROP_PREFIX + "prop1", "prop1");
-    final MappableObject obj = configurator.configurate(properties, PROP_PREFIX, MappableObject.class);
-    Assert.assertEquals("testing", obj.prop2);
-    Assert.assertEquals(ImmutableList.of(), obj.prop1List);
-    Assert.assertEquals("prop1", obj.prop1);
-
-  }
 }
 
 class MappableObject
@@ -164,19 +148,15 @@ class MappableObject
   final String prop1;
   @JsonProperty("prop1List")
   final List<String> prop1List;
-  @JsonProperty("prop2.prop.2")
-  final String prop2;
 
   @JsonCreator
   protected MappableObject(
       @JsonProperty("prop1") final String prop1,
-      @JsonProperty("prop1List") final List<String> prop1List,
-      @JsonProperty("prop2.prop.2") final String prop2
+      @JsonProperty("prop1List") final List<String> prop1List
   )
   {
     this.prop1 = prop1;
     this.prop1List = prop1List == null ? ImmutableList.<String>of() : prop1List;
-    this.prop2 = prop2;
   }
 
 
@@ -190,12 +170,6 @@ class MappableObject
   public String getProp1()
   {
     return prop1;
-  }
-
-  @JsonProperty
-  public String getProp2()
-  {
-    return prop2;
   }
 
   @Override

@@ -34,7 +34,7 @@ import java.util.List;
 public class NotDimFilter implements DimFilter
 {
 
-  private final DimFilter field;
+  final private DimFilter field;
 
   @JsonCreator
   public NotDimFilter(

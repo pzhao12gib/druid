@@ -66,7 +66,7 @@ public class RetryQueryRunnerTest
     }
   }
 
-  private final ObjectMapper jsonMapper = TestHelper.makeJsonMapper();
+  private final ObjectMapper jsonMapper = TestHelper.getJsonMapper();
 
   final TimeseriesQuery query = Druids.newTimeseriesQueryBuilder()
                                       .dataSource(QueryRunnerTestHelper.dataSource)
@@ -119,7 +119,10 @@ public class RetryQueryRunnerTest
         jsonMapper
     );
 
-    Iterable<Result<TimeseriesResultValue>> actualResults = runner.run(QueryPlus.wrap(query), context).toList();
+    Iterable<Result<TimeseriesResultValue>> actualResults = Sequences.toList(
+        runner.run(QueryPlus.wrap(query), context),
+        Lists.<Result<TimeseriesResultValue>>newArrayList()
+    );
 
     Assert.assertTrue(
         "Should have one entry in the list of missing segments",
@@ -168,7 +171,10 @@ public class RetryQueryRunnerTest
         jsonMapper
     );
 
-    Iterable<Result<TimeseriesResultValue>> actualResults = runner.run(QueryPlus.wrap(query), context).toList();
+    Iterable<Result<TimeseriesResultValue>> actualResults = Sequences.toList(
+        runner.run(QueryPlus.wrap(query), context),
+        Lists.<Result<TimeseriesResultValue>>newArrayList()
+    );
 
     Assert.assertTrue("Should return a list with one element", ((List) actualResults).size() == 1);
     Assert.assertTrue(
@@ -216,7 +222,10 @@ public class RetryQueryRunnerTest
         jsonMapper
     );
 
-    Iterable<Result<TimeseriesResultValue>> actualResults = runner.run(QueryPlus.wrap(query), context).toList();
+    Iterable<Result<TimeseriesResultValue>> actualResults = Sequences.toList(
+        runner.run(QueryPlus.wrap(query), context),
+        Lists.<Result<TimeseriesResultValue>>newArrayList()
+    );
 
     Assert.assertTrue("Should return a list with one element", ((List) actualResults).size() == 1);
     Assert.assertTrue(
@@ -249,7 +258,10 @@ public class RetryQueryRunnerTest
         jsonMapper
     );
 
-    runner.run(QueryPlus.wrap(query), context).toList();
+    Sequences.toList(
+        runner.run(QueryPlus.wrap(query), context),
+        Lists.<Result<TimeseriesResultValue>>newArrayList()
+    );
 
     Assert.assertTrue(
         "Should have one entry in the list of missing segments",
@@ -332,7 +344,10 @@ public class RetryQueryRunnerTest
         jsonMapper
     );
 
-    Iterable<Result<TimeseriesResultValue>> actualResults = runner.run(QueryPlus.wrap(query), context).toList();
+    Iterable<Result<TimeseriesResultValue>> actualResults = Sequences.toList(
+        runner.run(QueryPlus.wrap(query), context),
+        Lists.<Result<TimeseriesResultValue>>newArrayList()
+    );
 
     Assert.assertTrue("Should return a list with 3 elements", ((List) actualResults).size() == 3);
     Assert.assertTrue(

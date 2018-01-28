@@ -59,6 +59,14 @@ public class SketchAggregator implements Aggregator
   }
 
   @Override
+  public void reset()
+  {
+    if (union != null) {
+      union.reset();
+    }
+  }
+
+  @Override
   public Object get()
   {
     if (union == null) {

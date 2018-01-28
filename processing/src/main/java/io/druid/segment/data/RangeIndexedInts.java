@@ -19,26 +19,40 @@
 
 package io.druid.segment.data;
 
-import io.druid.java.util.common.IAE;
+import com.google.common.base.Preconditions;
 import io.druid.query.monomorphicprocessing.RuntimeShapeInspector;
 
+import java.io.IOException;
+
 /**
- * Reusable IndexedInts that returns sequences [0, 1, ..., N].
+ * An IndexedInts that always returns [0, 1, ..., N].
  */
 public class RangeIndexedInts implements IndexedInts
 {
-  private int size;
+  private static final int CACHE_LIMIT = 8;
+  private static final RangeIndexedInts[] CACHE = new RangeIndexedInts[CACHE_LIMIT];
 
-  public RangeIndexedInts()
-  {
+  static {
+    for (int i = 0; i < CACHE_LIMIT; i++) {
+      CACHE[i] = new RangeIndexedInts(i);
+    }
   }
 
-  public void setSize(int size)
+  private final int size;
+
+  private RangeIndexedInts(int size)
   {
-    if (size < 0) {
-      throw new IAE("Size[%d] must be non-negative", size);
-    }
     this.size = size;
+  }
+
+  public static RangeIndexedInts create(final int size)
+  {
+    Preconditions.checkArgument(size >= 0, "size >= 0");
+    if (size < CACHE_LIMIT) {
+      return CACHE[size];
+    } else {
+      return new RangeIndexedInts(size);
+    }
   }
 
   @Override
@@ -51,9 +65,14 @@ public class RangeIndexedInts implements IndexedInts
   public int get(int index)
   {
     if (index < 0 || index >= size) {
-      throw new IAE("index[%d] >= size[%d] or < 0", index, size);
+      throw new IndexOutOfBoundsException("index: " + index);
     }
     return index;
+  }
+
+  @Override
+  public void close() throws IOException
+  {
   }
 
   @Override

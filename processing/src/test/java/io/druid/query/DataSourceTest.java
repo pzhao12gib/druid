@@ -35,7 +35,7 @@ import java.util.Arrays;
 
 public class DataSourceTest
 {
-  private static final ObjectMapper jsonMapper = TestHelper.makeJsonMapper();
+  private static final ObjectMapper jsonMapper = TestHelper.getJsonMapper();
 
   @Test
   public void testSerialization() throws IOException

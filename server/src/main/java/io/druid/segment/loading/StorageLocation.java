@@ -20,10 +20,8 @@
 package io.druid.segment.loading;
 
 import com.google.common.collect.Sets;
-import io.druid.java.util.common.logger.Logger;
 import io.druid.timeline.DataSegment;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Set;
 
@@ -31,32 +29,16 @@ import java.util.Set;
 */
 class StorageLocation
 {
-  private static final Logger log = new Logger(StorageLocation.class);
-
   private final File path;
   private final long maxSize;
-  private final long freeSpaceToKeep;
   private final Set<DataSegment> segments;
 
   private volatile long currSize = 0;
 
-  StorageLocation(File path, long maxSize, @Nullable Double freeSpacePercent)
+  StorageLocation(File path, long maxSize)
   {
     this.path = path;
     this.maxSize = maxSize;
-
-    if (freeSpacePercent != null) {
-      long totalSpaceInPartition = path.getTotalSpace();
-      this.freeSpaceToKeep = (long) ((freeSpacePercent * totalSpaceInPartition) / 100);
-      log.info(
-          "SegmentLocation[%s] will try and maintain [%d:%d] free space while loading segments.",
-          path,
-          freeSpaceToKeep,
-          totalSpaceInPartition
-      );
-    } else {
-      this.freeSpaceToKeep = 0;
-    }
 
     this.segments = Sets.newHashSet();
   }
@@ -85,33 +67,9 @@ class StorageLocation
     }
   }
 
-  boolean canHandle(DataSegment segment)
+  boolean canHandle(long size)
   {
-    if (available() < segment.getSize()) {
-      log.warn(
-          "Segment[%s:%,d] too lage for storage[%s:%,d].",
-          segment.getIdentifier(), segment.getSize(), getPath(), available()
-      );
-      return false;
-    }
-
-    if (freeSpaceToKeep > 0) {
-      long currFreeSpace = path.getFreeSpace();
-      if ((freeSpaceToKeep + segment.getSize()) < currFreeSpace) {
-        log.warn(
-            "Segment[%s:%,d] too large for storage[%s:%,d] to maintain suggested freeSpace[%d], current freeSpace is [%d].",
-            segment.getIdentifier(),
-            segment.getSize(),
-            getPath(),
-            available(),
-            freeSpaceToKeep,
-            currFreeSpace
-        );
-        return false;
-      }
-    }
-
-    return true;
+    return available() >= size;
   }
 
   synchronized long available()

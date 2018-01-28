@@ -34,7 +34,6 @@ final class PredicateFilteredDimensionSelector implements DimensionSelector
 {
   private final DimensionSelector selector;
   private final Predicate<String> predicate;
-  private final ArrayBasedIndexedInts row = new ArrayBasedIndexedInts();
 
   PredicateFilteredDimensionSelector(DimensionSelector selector, Predicate<String> predicate)
   {
@@ -47,16 +46,14 @@ final class PredicateFilteredDimensionSelector implements DimensionSelector
   {
     IndexedInts baseRow = selector.getRow();
     int baseRowSize = baseRow.size();
-    row.ensureSize(baseRowSize);
+    int[] result = new int[baseRowSize];
     int resultSize = 0;
     for (int i = 0; i < baseRowSize; i++) {
       if (predicate.apply(selector.lookupName(baseRow.get(i)))) {
-        row.setValue(resultSize, i);
-        resultSize++;
+        result[resultSize++] = i;
       }
     }
-    row.setSize(resultSize);
-    return row;
+    return ArrayBasedIndexedInts.of(result, resultSize);
   }
 
   @Override

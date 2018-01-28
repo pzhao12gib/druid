@@ -23,10 +23,10 @@ import io.druid.java.util.common.StringUtils;
 
 public class Access
 {
-  public static final Access OK = new Access(true);
+  public final static Access OK = new Access(true);
 
   private final boolean allowed;
-  private final String message;
+  private String message;
 
   public Access(boolean allowed)
   {
@@ -44,9 +44,10 @@ public class Access
     return allowed;
   }
 
-  public String getMessage()
+  public Access setMessage(String message)
   {
-    return message;
+    this.message = message;
+    return this;
   }
 
   @Override

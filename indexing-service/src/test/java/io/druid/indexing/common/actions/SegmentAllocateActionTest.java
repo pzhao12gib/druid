@@ -25,8 +25,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import io.druid.java.util.emitter.EmittingLogger;
-import io.druid.java.util.emitter.service.ServiceEmitter;
+import com.metamx.emitter.EmittingLogger;
+import com.metamx.emitter.service.ServiceEmitter;
 import io.druid.indexing.common.TaskLock;
 import io.druid.indexing.common.task.NoopTask;
 import io.druid.indexing.common.task.Task;
@@ -107,7 +107,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testManySegmentsSameInterval() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getTaskLockbox().add(task);
 
@@ -138,7 +138,16 @@ public class SegmentAllocateActionTest
 
     final TaskLock partyLock = Iterables.getOnlyElement(
         FluentIterable.from(taskActionTestKit.getTaskLockbox().findLocksForTask(task))
-                      .filter(input -> input.getInterval().contains(PARTY_TIME))
+                      .filter(
+                          new Predicate<TaskLock>()
+                          {
+                            @Override
+                            public boolean apply(TaskLock input)
+                            {
+                              return input.getInterval().contains(PARTY_TIME);
+                            }
+                          }
+                      )
     );
 
     assertSameIdentifier(
@@ -173,7 +182,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testResumeSequence() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getTaskLockbox().add(task);
 
@@ -297,7 +306,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testMultipleSequences() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getTaskLockbox().add(task);
 
@@ -410,7 +419,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testAddToExistingLinearShardSpecsSameGranularity() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getMetadataStorageCoordinator().announceHistoricalSegments(
         ImmutableSet.of(
@@ -471,7 +480,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testAddToExistingNumberedShardSpecsSameGranularity() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getMetadataStorageCoordinator().announceHistoricalSegments(
         ImmutableSet.of(
@@ -532,7 +541,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testAddToExistingNumberedShardSpecsCoarserPreferredGranularity() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getMetadataStorageCoordinator().announceHistoricalSegments(
         ImmutableSet.of(
@@ -569,7 +578,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testAddToExistingNumberedShardSpecsFinerPreferredGranularity() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getMetadataStorageCoordinator().announceHistoricalSegments(
         ImmutableSet.of(
@@ -606,7 +615,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testCannotAddToExistingNumberedShardSpecsWithCoarserQueryGranularity() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getMetadataStorageCoordinator().announceHistoricalSegments(
         ImmutableSet.of(
@@ -635,7 +644,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testCannotDoAnythingWithSillyQueryGranularity() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
     taskActionTestKit.getTaskLockbox().add(task);
 
     final SegmentIdentifier id1 = allocate(task, PARTY_TIME, Granularities.DAY, Granularities.HOUR, "s1", null);
@@ -646,7 +655,7 @@ public class SegmentAllocateActionTest
   @Test
   public void testCannotAddToExistingSingleDimensionShardSpecs() throws Exception
   {
-    final Task task = new NoopTask(null, null, 0, 0, null, null, null);
+    final Task task = new NoopTask(null, 0, 0, null, null, null);
 
     taskActionTestKit.getMetadataStorageCoordinator().announceHistoricalSegments(
         ImmutableSet.of(
@@ -681,8 +690,7 @@ public class SegmentAllocateActionTest
         Granularities.MINUTE,
         Granularities.HOUR,
         "s1",
-        "prev",
-        false
+        "prev"
     );
 
     final ObjectMapper objectMapper = new DefaultObjectMapper();
@@ -714,8 +722,7 @@ public class SegmentAllocateActionTest
         queryGranularity,
         preferredSegmentGranularity,
         sequenceName,
-        sequencePreviousId,
-        false
+        sequencePreviousId
     );
     return action.perform(task, taskActionTestKit.getTaskActionToolbox());
   }

@@ -51,7 +51,7 @@ import static io.druid.query.QueryRunnerTestHelper.rowsCount;
 
 public class TopNQueryTest
 {
-  private static final ObjectMapper jsonMapper = TestHelper.makeJsonMapper();
+  private static final ObjectMapper jsonMapper = TestHelper.getJsonMapper();
 
   @Test
   public void testQuerySerialization() throws IOException

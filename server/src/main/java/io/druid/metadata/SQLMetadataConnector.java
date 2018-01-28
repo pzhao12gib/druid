@@ -44,9 +44,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLRecoverableException;
 import java.sql.SQLTransientException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public abstract class SQLMetadataConnector implements MetadataStorageConnector
 {
@@ -126,8 +125,16 @@ public abstract class SQLMetadataConnector implements MetadataStorageConnector
       final Predicate<Throwable> myShouldRetry
   )
   {
+    final Callable<T> call = new Callable<T>()
+    {
+      @Override
+      public T call() throws Exception
+      {
+        return getDBI().withHandle(callback);
+      }
+    };
     try {
-      return RetryUtils.retry(() -> getDBI().withHandle(callback), myShouldRetry, DEFAULT_MAX_TRIES);
+      return RetryUtils.retry(call, myShouldRetry, DEFAULT_MAX_TRIES);
     }
     catch (Exception e) {
       throw Throwables.propagate(e);
@@ -141,8 +148,16 @@ public abstract class SQLMetadataConnector implements MetadataStorageConnector
 
   public <T> T retryTransaction(final TransactionCallback<T> callback, final int quietTries, final int maxTries)
   {
+    final Callable<T> call = new Callable<T>()
+    {
+      @Override
+      public T call() throws Exception
+      {
+        return getDBI().inTransaction(callback);
+      }
+    };
     try {
-      return RetryUtils.retry(() -> getDBI().inTransaction(callback), shouldRetry, quietTries, maxTries);
+      return RetryUtils.retry(call, shouldRetry, quietTries, maxTries);
     }
     catch (Exception e) {
       throw Throwables.propagate(e);
@@ -426,78 +441,6 @@ public abstract class SQLMetadataConnector implements MetadataStorageConnector
                     .execute();
             }
             return null;
-          }
-        }
-    );
-  }
-
-  @Override
-  public boolean compareAndSwap(
-      List<MetadataCASUpdate> updates
-  ) throws Exception
-  {
-    return getDBI().inTransaction(
-        new TransactionCallback<Boolean>()
-        {
-          @Override
-          public Boolean inTransaction(Handle handle, TransactionStatus transactionStatus) throws Exception
-          {
-            List<byte[]> currentValues = new ArrayList<byte[]>();
-
-            // Compare
-            for (MetadataCASUpdate update : updates) {
-              byte[] currentValue = handle
-                  .createQuery(
-                      StringUtils.format(
-                          "SELECT %1$s FROM %2$s WHERE %3$s = :key",
-                          update.getValueColumn(),
-                          update.getTableName(),
-                          update.getKeyColumn()
-                      )
-                  )
-                  .bind("key", update.getKey())
-                  .map(ByteArrayMapper.FIRST)
-                  .first();
-
-              if (!Arrays.equals(currentValue, update.getOldValue())) {
-                return false;
-              }
-              currentValues.add(currentValue);
-            }
-
-            // Swap
-            for (int i = 0; i < updates.size(); i++) {
-              MetadataCASUpdate update = updates.get(i);
-              byte[] currentValue = currentValues.get(i);
-
-              if (currentValue == null) {
-                handle.createStatement(
-                    StringUtils.format(
-                        "INSERT INTO %1$s (%2$s, %3$s) VALUES (:key, :value)",
-                        update.getTableName(),
-                        update.getKeyColumn(),
-                        update.getValueColumn()
-                    )
-                )
-                      .bind("key", update.getKey())
-                      .bind("value", update.getNewValue())
-                      .execute();
-              } else {
-                handle.createStatement(
-                    StringUtils.format(
-                        "UPDATE %1$s SET %3$s=:value WHERE %2$s=:key",
-                        update.getTableName(),
-                        update.getKeyColumn(),
-                        update.getValueColumn()
-                    )
-                )
-                      .bind("key", update.getKey())
-                      .bind("value", update.getNewValue())
-                      .execute();
-              }
-            }
-
-            return true;
           }
         }
     );

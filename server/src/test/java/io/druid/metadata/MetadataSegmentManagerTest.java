@@ -25,10 +25,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
+import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.Intervals;
 import io.druid.java.util.common.StringUtils;
-import io.druid.segment.TestHelper;
 import io.druid.server.metrics.NoopServiceEmitter;
 import io.druid.timeline.DataSegment;
 import io.druid.timeline.partition.NoneShardSpec;
@@ -48,7 +48,7 @@ public class MetadataSegmentManagerTest
 
   private SQLMetadataSegmentManager manager;
   private SQLMetadataSegmentPublisher publisher;
-  private final ObjectMapper jsonMapper = TestHelper.makeJsonMapper();
+  private final ObjectMapper jsonMapper = new DefaultObjectMapper();
 
   private final DataSegment segment1 = new DataSegment(
       "wikipedia",

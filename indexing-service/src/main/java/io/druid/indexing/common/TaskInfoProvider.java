@@ -20,7 +20,6 @@
 package io.druid.indexing.common;
 
 import com.google.common.base.Optional;
-import io.druid.indexer.TaskLocation;
 
 public interface TaskInfoProvider
 {

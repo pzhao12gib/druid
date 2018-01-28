@@ -25,7 +25,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
-import io.druid.java.util.emitter.service.ServiceEmitter;
+import com.metamx.emitter.service.ServiceEmitter;
 import io.druid.client.cache.Cache;
 import io.druid.client.cache.CacheConfig;
 import io.druid.client.cache.CacheStats;
@@ -65,6 +65,7 @@ import org.junit.runners.Parameterized;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -305,7 +306,7 @@ public class CachingQueryRunnerTest
     Assert.assertFalse("sequence must not be closed", closable.isClosed());
     Assert.assertNull("cache must be empty", cache.get(cacheKey));
 
-    List results = res.toList();
+    ArrayList results = Sequences.toList(res, new ArrayList());
     Assert.assertTrue(closable.isClosed());
     Assert.assertEquals(expectedRes.toString(), results.toString());
 
@@ -386,7 +387,7 @@ public class CachingQueryRunnerTest
 
     );
     HashMap<String, Object> context = new HashMap<String, Object>();
-    List<Result> results = runner.run(QueryPlus.wrap(query), context).toList();
+    List<Result> results = Sequences.toList(runner.run(QueryPlus.wrap(query), context), new ArrayList());
     Assert.assertEquals(expectedResults.toString(), results.toString());
   }
 

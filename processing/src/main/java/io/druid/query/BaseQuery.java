@@ -25,17 +25,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import io.druid.guice.annotations.ExtensionPoint;
-import io.druid.java.util.common.granularity.Granularities;
-import io.druid.java.util.common.granularity.Granularity;
-import io.druid.java.util.common.granularity.PeriodGranularity;
 import io.druid.query.spec.QuerySegmentSpec;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  */
@@ -55,7 +50,6 @@ public abstract class BaseQuery<T extends Comparable<T>> implements Query<T>
   private final Map<String, Object> context;
   private final QuerySegmentSpec querySegmentSpec;
   private volatile Duration duration;
-  private final Granularity granularity;
 
   public BaseQuery(
       DataSource dataSource,
@@ -64,26 +58,13 @@ public abstract class BaseQuery<T extends Comparable<T>> implements Query<T>
       Map<String, Object> context
   )
   {
-    this(dataSource, querySegmentSpec, descending, context, Granularities.ALL);
-  }
-
-  public BaseQuery(
-      DataSource dataSource,
-      QuerySegmentSpec querySegmentSpec,
-      boolean descending,
-      Map<String, Object> context,
-      Granularity granularity
-  )
-  {
     Preconditions.checkNotNull(dataSource, "dataSource can't be null");
     Preconditions.checkNotNull(querySegmentSpec, "querySegmentSpec can't be null");
-    Preconditions.checkNotNull(granularity, "Must specify a granularity");
 
     this.dataSource = dataSource;
     this.context = context;
     this.querySegmentSpec = querySegmentSpec;
     this.descending = descending;
-    this.granularity = granularity;
   }
 
   @JsonProperty
@@ -132,21 +113,6 @@ public abstract class BaseQuery<T extends Comparable<T>> implements Query<T>
     }
 
     return duration;
-  }
-
-  @Override
-  @JsonProperty
-  public Granularity getGranularity()
-  {
-    return granularity;
-  }
-
-  @Override
-  public DateTimeZone getTimezone()
-  {
-    return granularity instanceof PeriodGranularity
-           ? ((PeriodGranularity) granularity).getTimeZone()
-           : DateTimeZone.UTC;
   }
 
   @Override
@@ -227,19 +193,38 @@ public abstract class BaseQuery<T extends Comparable<T>> implements Query<T>
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    BaseQuery<?> baseQuery = (BaseQuery<?>) o;
-    return descending == baseQuery.descending &&
-           Objects.equals(dataSource, baseQuery.dataSource) &&
-           Objects.equals(context, baseQuery.context) &&
-           Objects.equals(querySegmentSpec, baseQuery.querySegmentSpec) &&
-           Objects.equals(duration, baseQuery.duration) &&
-           Objects.equals(granularity, baseQuery.granularity);
+
+    BaseQuery baseQuery = (BaseQuery) o;
+
+    if (descending != baseQuery.descending) {
+      return false;
+    }
+    if (context != null ? !context.equals(baseQuery.context) : baseQuery.context != null) {
+      return false;
+    }
+    if (dataSource != null ? !dataSource.equals(baseQuery.dataSource) : baseQuery.dataSource != null) {
+      return false;
+    }
+    if (duration != null ? !duration.equals(baseQuery.duration) : baseQuery.duration != null) {
+      return false;
+    }
+    if (querySegmentSpec != null
+        ? !querySegmentSpec.equals(baseQuery.querySegmentSpec)
+        : baseQuery.querySegmentSpec != null) {
+      return false;
+    }
+
+    return true;
   }
 
   @Override
   public int hashCode()
   {
-
-    return Objects.hash(dataSource, descending, context, querySegmentSpec, duration, granularity);
+    int result = dataSource != null ? dataSource.hashCode() : 0;
+    result = 31 * result + (descending ? 1 : 0);
+    result = 31 * result + (context != null ? context.hashCode() : 0);
+    result = 31 * result + (querySegmentSpec != null ? querySegmentSpec.hashCode() : 0);
+    result = 31 * result + (duration != null ? duration.hashCode() : 0);
+    return result;
   }
 }

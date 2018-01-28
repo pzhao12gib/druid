@@ -23,6 +23,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,16 +37,23 @@ public class WrappingSequenceTest
   public void testSanity() throws Exception
   {
     final AtomicInteger closedCounter = new AtomicInteger(0);
-    Closeable closeable = () -> closedCounter.incrementAndGet();
+    Closeable closeable = new Closeable()
+    {
+      @Override
+      public void close() throws IOException
+      {
+        closedCounter.incrementAndGet();
+      }
+    };
 
     final List<Integer> nums = Arrays.asList(1, 2, 3, 4, 5);
 
-    SequenceTestHelper.testAll(Sequences.simple(nums).withBaggage(closeable), nums);
+    SequenceTestHelper.testAll(Sequences.withBaggage(Sequences.simple(nums), closeable), nums);
 
     Assert.assertEquals(3, closedCounter.get());
 
     closedCounter.set(0);
-    SequenceTestHelper.testClosed(closedCounter, new UnsupportedSequence().withBaggage(closeable));
+    SequenceTestHelper.testClosed(closedCounter, Sequences.withBaggage(new UnsupportedSequence(), closeable));
   }
 
   @Test
@@ -54,18 +63,35 @@ public class WrappingSequenceTest
     final AtomicInteger closed2 = new AtomicInteger();
     final AtomicInteger counter = new AtomicInteger();
 
-    Sequence<Integer> sequence = Sequences
-        .simple(Arrays.asList(1, 2, 3))
-        .withBaggage(() -> closed1.set(counter.incrementAndGet()))
-        .withBaggage(() -> closed2.set(counter.incrementAndGet()));
+    Sequence<Integer> sequence = Sequences.withBaggage(
+        Sequences.withBaggage(
+            Sequences.simple(Arrays.asList(1, 2, 3)),
+            new Closeable()
+            {
+              @Override
+              public void close() throws IOException
+              {
+                closed1.set(counter.incrementAndGet());
+              }
+            }
+        ),
+        new Closeable()
+        {
+          @Override
+          public void close() throws IOException
+          {
+            closed2.set(counter.incrementAndGet());
+          }
+        }
+    );
     // Run sequence via accumulate
-    sequence.toList();
+    Sequences.toList(sequence, new ArrayList<Integer>());
     Assert.assertEquals(1, closed1.get());
     Assert.assertEquals(2, closed2.get());
 
     // Ensure sequence runs via Yielder, because LimitedSequence extends YieldingSequenceBase
-    Sequence<Integer> yieldingSequence = sequence.limit(1);
-    yieldingSequence.toList();
+    Sequence<Integer> yieldingSequence = Sequences.limit(sequence, 1);
+    Sequences.toList(yieldingSequence, new ArrayList<Integer>());
     Assert.assertEquals(3, closed1.get());
     Assert.assertEquals(4, closed2.get());
   }

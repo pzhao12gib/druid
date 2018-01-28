@@ -96,8 +96,7 @@ public class DruidAvaticaHandlerTest
     @Override
     public int getMaxConnections()
     {
-      // This must match the number of Connection objects created in setUp()
-      return 3;
+      return 2;
     }
 
     @Override
@@ -668,13 +667,9 @@ public class DruidAvaticaHandlerTest
     final Connection connection2 = DriverManager.getConnection(url);
     final Statement statement2 = connection2.createStatement();
 
-    final Connection connection3 = DriverManager.getConnection(url);
-    final Statement statement3 = connection3.createStatement();
-
     expectedException.expect(AvaticaClientRuntimeException.class);
-    expectedException.expectMessage("Too many connections, limit is[3]");
-
-    final Connection connection4 = DriverManager.getConnection(url);
+    expectedException.expectMessage("Too many connections, limit is[2]");
+    final Connection connection3 = DriverManager.getConnection(url);
   }
 
   @Test
@@ -687,9 +682,6 @@ public class DruidAvaticaHandlerTest
     connection2.createStatement().close();
 
     final Connection connection3 = DriverManager.getConnection(url);
-    connection3.createStatement().close();
-
-    final Connection connection4 = DriverManager.getConnection(url);
     Assert.assertTrue(true);
   }
 

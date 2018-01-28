@@ -52,7 +52,9 @@
   },
   "ioConfig": {
     "topic": "%%TOPIC%%",
-    "consumerProperties": %%CONSUMER_PROPERTIES%%,
+    "consumerProperties": {
+      "bootstrap.servers": "%%KAFKA_BROKER%%"
+    },
     "taskCount": 2,
     "replicas": 1,
     "taskDuration": "PT2M",

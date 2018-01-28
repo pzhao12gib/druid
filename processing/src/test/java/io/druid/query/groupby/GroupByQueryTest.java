@@ -48,7 +48,7 @@ import java.util.Arrays;
 
 public class GroupByQueryTest
 {
-  private static final ObjectMapper jsonMapper = TestHelper.makeJsonMapper();
+  private static final ObjectMapper jsonMapper = TestHelper.getJsonMapper();
 
   @Test
   public void testQuerySerialization() throws IOException

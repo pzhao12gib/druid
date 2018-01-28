@@ -60,6 +60,12 @@ public class FloatSumAggregator implements Aggregator
   }
 
   @Override
+  public void reset()
+  {
+    sum = 0;
+  }
+
+  @Override
   public Object get()
   {
     return sum;

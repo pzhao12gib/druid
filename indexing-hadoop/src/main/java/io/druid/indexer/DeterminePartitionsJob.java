@@ -468,7 +468,7 @@ public class DeterminePartitionsJob implements Jobby
     }
   }
 
-  private abstract static class DeterminePartitionsDimSelectionBaseReducer
+  private static abstract class DeterminePartitionsDimSelectionBaseReducer
       extends Reducer<BytesWritable, Text, BytesWritable, Text>
   {
     protected volatile HadoopDruidIndexerConfig config = null;

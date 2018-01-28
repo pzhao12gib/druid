@@ -35,7 +35,7 @@ import java.util.Arrays;
 @RunWith(Parameterized.class)
 public class TimeseriesQueryTest
 {
-  private static final ObjectMapper jsonMapper = TestHelper.makeJsonMapper();
+  private static final ObjectMapper jsonMapper = TestHelper.getJsonMapper();
 
   @Parameterized.Parameters(name = "descending={0}")
   public static Iterable<Object[]> constructorFeeder() throws IOException

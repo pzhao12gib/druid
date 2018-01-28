@@ -21,13 +21,11 @@ package io.druid.segment.serde;
 
 import com.google.common.base.Function;
 import io.druid.guice.annotations.ExtensionPoint;
-import io.druid.segment.writeout.SegmentWriteOutMedium;
 import io.druid.segment.GenericColumnSerializer;
 import io.druid.segment.column.ColumnBuilder;
+import io.druid.segment.data.IOPeon;
 import io.druid.segment.data.ObjectStrategy;
-import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 
 /**
@@ -82,9 +80,9 @@ public abstract class ComplexMetricSerde
    *
    * @return serialized intermediate representation of aggregate in byte[]
    */
-  public byte[] toBytes(@Nullable Object val)
+  public byte[] toBytes(Object val)
   {
-    return val != null ? getObjectStrategy().toBytes(val) : ByteArrays.EMPTY_ARRAY;
+    return getObjectStrategy().toBytes(val);
   }
 
   /**
@@ -110,10 +108,12 @@ public abstract class ComplexMetricSerde
    * For large column (i.e columns greater than Integer.MAX) use
    * (@link LargeColumnSupportedComplexColumnSerializer)
    *
+   * @param peon IOPeon
+   * @param column name of the column
    * @return an instance of GenericColumnSerializer used for serialization.
    */
-  public GenericColumnSerializer getSerializer(SegmentWriteOutMedium segmentWriteOutMedium, String column)
+  public GenericColumnSerializer getSerializer(IOPeon peon, String column)
   {
-    return ComplexColumnSerializer.create(segmentWriteOutMedium, column, this.getObjectStrategy());
+    return ComplexColumnSerializer.create(peon, column, this.getObjectStrategy());
   }
 }

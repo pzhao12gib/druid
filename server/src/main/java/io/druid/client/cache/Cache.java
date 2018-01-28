@@ -21,10 +21,9 @@ package io.druid.client.cache;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
-import io.druid.java.util.emitter.service.ServiceEmitter;
+import com.metamx.emitter.service.ServiceEmitter;
 import io.druid.java.util.common.StringUtils;
 
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
@@ -33,7 +32,6 @@ import java.util.Map;
  */
 public interface Cache
 {
-  @Nullable
   byte[] get(NamedKey key);
   void put(NamedKey key, byte[] value);
 
@@ -59,8 +57,8 @@ public interface Cache
 
   class NamedKey
   {
-    public final String namespace;
-    public final byte[] key;
+    final public String namespace;
+    final public byte[] key;
 
     public NamedKey(String namespace, byte[] key)
     {

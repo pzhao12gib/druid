@@ -26,6 +26,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.CharSource;
 import io.druid.java.util.common.DateTimes;
 import io.druid.java.util.common.StringUtils;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.query.Druids;
 import io.druid.query.QueryPlus;
 import io.druid.query.QueryRunner;
@@ -236,8 +237,10 @@ public class SearchQueryRunnerWithCaseTest
   private void checkSearchQuery(SearchQuery searchQuery, Map<String, Set<String>> expectedResults)
   {
     HashMap<String, List> context = new HashMap<>();
-    Iterable<Result<SearchResultValue>> results =
-        runner.run(QueryPlus.<Result<SearchResultValue>>wrap(searchQuery), context).toList();
+    Iterable<Result<SearchResultValue>> results = Sequences.toList(
+        runner.run(QueryPlus.<Result<SearchResultValue>>wrap(searchQuery), context),
+        Lists.<Result<SearchResultValue>>newArrayList()
+    );
 
     for (Result<SearchResultValue> result : results) {
       Assert.assertEquals(DateTimes.of("2011-01-12T00:00:00.000Z"), result.getTimestamp());

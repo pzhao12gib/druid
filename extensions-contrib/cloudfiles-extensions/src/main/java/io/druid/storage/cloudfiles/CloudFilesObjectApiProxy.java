@@ -19,7 +19,6 @@
 
 package io.druid.storage.cloudfiles;
 
-import org.jclouds.http.options.GetOptions;
 import org.jclouds.io.Payload;
 import org.jclouds.openstack.swift.v1.domain.SwiftObject;
 import org.jclouds.openstack.swift.v1.features.ObjectApi;
@@ -53,20 +52,10 @@ public class CloudFilesObjectApiProxy
     return objectApi.put(cloudFilesObject.getPath(), cloudFilesObject.getPayload());
   }
 
-  public CloudFilesObject get(String path, long start)
+  public CloudFilesObject get(String path)
   {
-    final SwiftObject swiftObject;
-    if (start == 0) {
-      swiftObject = objectApi.get(path);
-    } else {
-      swiftObject = objectApi.get(path, new GetOptions().startAt(start));
-    }
+    SwiftObject swiftObject = objectApi.get(path);
     Payload payload = swiftObject.getPayload();
     return new CloudFilesObject(payload, this.region, this.container, path);
-  }
-
-  public boolean exists(String path)
-  {
-    return objectApi.getWithoutBody(path) != null;
   }
 }

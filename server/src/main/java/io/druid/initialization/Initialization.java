@@ -64,7 +64,6 @@ import io.druid.guice.security.EscalatorModule;
 import io.druid.java.util.common.ISE;
 import io.druid.java.util.common.logger.Logger;
 import io.druid.metadata.storage.derby.DerbyMetadataStorageDruidModule;
-import io.druid.segment.writeout.SegmentWriteOutMediumModule;
 import io.druid.server.emitter.EmitterModule;
 import io.druid.server.initialization.AuthenticatorMapperModule;
 import io.druid.server.initialization.AuthorizerMapperModule;
@@ -98,7 +97,7 @@ public class Initialization
   private static final Logger log = new Logger(Initialization.class);
   private static final ConcurrentMap<File, URLClassLoader> loadersMap = new ConcurrentHashMap<>();
 
-  private static final Map<Class, Collection> extensionsMap = Maps.newHashMap();
+  private final static Map<Class, Collection> extensionsMap = Maps.newHashMap();
 
   /**
    * @param clazz service class
@@ -140,7 +139,7 @@ public class Initialization
    * elements in the returned collection is not specified and not guaranteed to be the same for different calls to
    * getFromExtensions().
    */
-  public static synchronized <T> Collection<T> getFromExtensions(ExtensionsConfig config, Class<T> serviceClass)
+  public synchronized static <T> Collection<T> getFromExtensions(ExtensionsConfig config, Class<T> serviceClass)
   {
     Collection<T> modulesToLoad = new ServiceLoadingFromExtensions<>(config, serviceClass).implsToLoad;
     extensionsMap.put(serviceClass, modulesToLoad);
@@ -361,7 +360,6 @@ public class Initialization
         new AnnouncerModule(),
         new AWSModule(),
         new MetricsModule(),
-        new SegmentWriteOutMediumModule(),
         new ServerModule(),
         new DruidProcessingConfigModule(),
         new StorageNodeModule(),

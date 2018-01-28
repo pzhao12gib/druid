@@ -30,8 +30,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
-import io.druid.java.util.emitter.EmittingLogger;
-import io.druid.java.util.emitter.service.ServiceEmitter;
+import com.metamx.emitter.EmittingLogger;
+import com.metamx.emitter.service.ServiceEmitter;
 import io.druid.client.cache.Cache;
 import io.druid.client.cache.CacheConfig;
 import io.druid.common.guava.ThreadRenamingCallable;
@@ -216,7 +216,7 @@ public class RealtimePlumber implements Plumber
       return -1;
     }
 
-    final int numRows = sink.add(row, false);
+    final int numRows = sink.add(row);
 
     if (!sink.canAppendRow() || System.currentTimeMillis() > nextFlush) {
       persist(committerSupplier.get());
@@ -422,13 +422,13 @@ public class RealtimePlumber implements Plumber
                   closer.register(segmentAndCloseable.rhs);
                 }
 
+
                 mergedFile = indexMerger.mergeQueryableIndex(
                     indexes,
                     schema.getGranularitySpec().isRollup(),
                     schema.getAggregators(),
                     mergedTarget,
-                    config.getIndexSpec(),
-                    config.getSegmentWriteOutMediumFactory()
+                    config.getIndexSpec()
                 );
               }
               catch (Throwable t) {
@@ -444,17 +444,9 @@ public class RealtimePlumber implements Plumber
 
               log.info("Pushing [%s] to deep storage", sink.getSegment().getIdentifier());
 
-              // The realtime plumber can generate segments with the same identifier (i.e. replica tasks) but does not
-              // have any strict requirement that the contents of these segments be identical. It is possible that two
-              // tasks generate a segment with the same identifier containing different data, and in this situation we
-              // want to favor the data from the task which pushed first. This is because it is possible that one
-              // historical could load the segment after the first task pushed and another historical load the same
-              // segment after the second task pushed. If the second task's segment overwrote the first one, the second
-              // historical node would be serving different data from the first. Hence set replaceExisting == false.
               DataSegment segment = dataSegmentPusher.push(
                   mergedFile,
-                  sink.getSegment().withDimensions(IndexMerger.getMergedDimensionsFromQueryableIndexes(indexes)),
-                  false
+                  sink.getSegment().withDimensions(IndexMerger.getMergedDimensionsFromQueryableIndexes(indexes))
               );
               log.info("Inserting [%s] to the metadata store", sink.getSegment().getIdentifier());
               segmentPublisher.publishSegment(segment);
@@ -950,8 +942,7 @@ public class RealtimePlumber implements Plumber
             indexToPersist.getIndex(),
             interval,
             new File(computePersistDir(schema, interval), String.valueOf(indexToPersist.getCount())),
-            indexSpec,
-            config.getSegmentWriteOutMediumFactory()
+            indexSpec
         );
 
         indexToPersist.swapSegment(

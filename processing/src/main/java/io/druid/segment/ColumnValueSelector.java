@@ -22,8 +22,7 @@ package io.druid.segment;
 import io.druid.guice.annotations.PublicApi;
 
 /**
- * Base type for interfaces that manage column value selection, e.g. {@link DimensionSelector}, {@link
- * LongColumnSelector}.
+ * Base type for interfaces that manage column value selection, e.g. DimensionSelector, LongColumnSelector
  *
  * This interface has methods to get the value in all primitive types, that have corresponding basic aggregators in
  * Druid: Sum, Min, Max, etc: {@link #getFloat()}, {@link #getDouble()} and {@link #getLong()} to support "polymorphic"

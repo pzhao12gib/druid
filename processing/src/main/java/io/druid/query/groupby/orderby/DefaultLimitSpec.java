@@ -281,9 +281,11 @@ public class DefaultLimitSpec implements LimitSpec
     }
 
     @Override
-    public Sequence<Row> apply(Sequence<Row> input)
+    public Sequence<Row> apply(
+        Sequence<Row> input
+    )
     {
-      return input.limit(limit);
+      return Sequences.limit(input, limit);
     }
   }
 

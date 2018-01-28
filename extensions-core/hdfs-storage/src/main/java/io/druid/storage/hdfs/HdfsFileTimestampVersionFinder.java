@@ -21,8 +21,10 @@ package io.druid.storage.hdfs;
 
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+
 import io.druid.data.SearchableVersionedDataFinder;
 import io.druid.java.util.common.RetryUtils;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,6 +34,7 @@ import org.apache.hadoop.fs.PathFilter;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
 /**
@@ -86,12 +89,17 @@ public class HdfsFileTimestampVersionFinder extends HdfsDataSegmentPuller implem
     final Path path = new Path(uri);
     try {
       return RetryUtils.retry(
-          () -> {
-            final FileSystem fs = path.getFileSystem(config);
-            if (!fs.exists(path)) {
-              return null;
+          new Callable<URI>()
+          {
+            @Override
+            public URI call() throws Exception
+            {
+              final FileSystem fs = path.getFileSystem(config);
+              if (!fs.exists(path)) {
+                return null;
+              }
+              return mostRecentInDir(fs.isDirectory(path) ? path : path.getParent(), pattern);
             }
-            return mostRecentInDir(fs.isDirectory(path) ? path : path.getParent(), pattern);
           },
           shouldRetryPredicate(),
           DEFAULT_RETRY_COUNT

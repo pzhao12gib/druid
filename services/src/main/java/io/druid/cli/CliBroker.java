@@ -28,7 +28,6 @@ import io.airlift.airline.Command;
 import io.druid.client.BrokerSegmentWatcherConfig;
 import io.druid.client.BrokerServerView;
 import io.druid.client.CachingClusteredClient;
-import io.druid.client.HttpServerInventoryViewResource;
 import io.druid.client.TimelineServerView;
 import io.druid.client.cache.CacheConfig;
 import io.druid.client.cache.CacheMonitor;
@@ -59,7 +58,6 @@ import io.druid.server.metrics.MetricsModule;
 import io.druid.server.metrics.QueryCountStatsProvider;
 import io.druid.server.router.TieredBrokerConfig;
 import io.druid.sql.guice.SqlModule;
-import io.druid.timeline.PruneLoadSpec;
 import org.eclipse.jetty.server.Server;
 
 import java.util.List;
@@ -96,7 +94,6 @@ public class CliBroker extends ServerRunnable
             );
             binder.bindConstant().annotatedWith(Names.named("servicePort")).to(8082);
             binder.bindConstant().annotatedWith(Names.named("tlsServicePort")).to(8282);
-            binder.bindConstant().annotatedWith(PruneLoadSpec.class).to(true);
 
             binder.bind(CachingClusteredClient.class).in(LazySingleton.class);
             binder.bind(BrokerServerView.class).in(LazySingleton.class);
@@ -120,11 +117,8 @@ public class CliBroker extends ServerRunnable
             binder.bind(QueryCountStatsProvider.class).to(BrokerQueryResource.class).in(LazySingleton.class);
             Jerseys.addResource(binder, BrokerResource.class);
             Jerseys.addResource(binder, ClientInfoResource.class);
-
             LifecycleModule.register(binder, BrokerQueryResource.class);
             LifecycleModule.register(binder, DruidBroker.class);
-
-            Jerseys.addResource(binder, HttpServerInventoryViewResource.class);
 
             MetricsModule.register(binder, CacheMonitor.class);
 

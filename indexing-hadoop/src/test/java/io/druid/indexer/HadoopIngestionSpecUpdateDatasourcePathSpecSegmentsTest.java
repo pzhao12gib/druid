@@ -60,9 +60,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
   {
     jsonMapper = new DefaultObjectMapper();
     jsonMapper.setInjectableValues(
-        new InjectableValues.Std()
-            .addValue(ObjectMapper.class, jsonMapper)
-            .addValue(DataSegment.PruneLoadSpecHolder.class, DataSegment.PruneLoadSpecHolder.DEFAULT)
+        new InjectableValues.Std().addValue(ObjectMapper.class, jsonMapper)
     );
   }
 
@@ -82,7 +80,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
   );
 
   @Test
-  public void testUpdateSegmentListIfDatasourcePathSpecIsUsedWithNoDatasourcePathSpec() throws Exception
+  public void testupdateSegmentListIfDatasourcePathSpecIsUsedWithNoDatasourcePathSpec() throws Exception
   {
     PathSpec pathSpec = new StaticPathSpec("/xyz", null);
     HadoopDruidIndexerConfig config = testRunUpdateSegmentListIfDatasourcePathSpecIsUsed(pathSpec, null);
@@ -90,7 +88,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
   }
 
   @Test
-  public void testUpdateSegmentListIfDatasourcePathSpecIsUsedWithJustDatasourcePathSpec() throws Exception
+  public void testupdateSegmentListIfDatasourcePathSpecIsUsedWithJustDatasourcePathSpec() throws Exception
   {
     PathSpec pathSpec = new DatasourcePathSpec(
         jsonMapper,
@@ -109,7 +107,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
   }
 
   @Test
-  public void testUpdateSegmentListIfDatasourcePathSpecWithMatchingUserSegments() throws Exception
+  public void testupdateSegmentListIfDatasourcePathSpecWithMatchingUserSegments() throws Exception
   {
     PathSpec pathSpec = new DatasourcePathSpec(
         jsonMapper,
@@ -138,7 +136,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
   }
 
   @Test(expected = IOException.class)
-  public void testUpdateSegmentListThrowsExceptionWithUserSegmentsMismatch() throws Exception
+  public void testupdateSegmentListThrowsExceptionWithUserSegmentsMismatch() throws Exception
   {
     PathSpec pathSpec = new DatasourcePathSpec(
         jsonMapper,
@@ -163,7 +161,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
   }
 
   @Test
-  public void testUpdateSegmentListIfDatasourcePathSpecIsUsedWithJustDatasourcePathSpecAndPartialInterval()
+  public void testupdateSegmentListIfDatasourcePathSpecIsUsedWithJustDatasourcePathSpecAndPartialInterval()
       throws Exception
   {
     PathSpec pathSpec = new DatasourcePathSpec(
@@ -193,7 +191,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
   }
 
   @Test
-  public void testUpdateSegmentListIfDatasourcePathSpecIsUsedWithMultiplePathSpec() throws Exception
+  public void testupdateSegmentListIfDatasourcePathSpecIsUsedWithMultiplePathSpec() throws Exception
   {
     PathSpec pathSpec = new MultiplePathSpec(
         ImmutableList.of(

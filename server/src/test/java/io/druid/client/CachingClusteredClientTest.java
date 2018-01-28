@@ -1754,7 +1754,7 @@ public class CachingClusteredClientTest
     descriptors.add(new SegmentDescriptor(interval3, "v", 6));
     MultipleSpecificSegmentSpec expected = new MultipleSpecificSegmentSpec(descriptors);
 
-    runner.run(QueryPlus.wrap(query), context).toList();
+    Sequences.toList(runner.run(QueryPlus.wrap(query), context), Lists.newArrayList());
 
     Assert.assertEquals(expected, ((TimeseriesQuery) capture.getValue().getQuery()).getQuerySegmentSpec());
   }

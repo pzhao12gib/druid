@@ -36,7 +36,7 @@ import java.util.List;
  */
 public class DatasourceIngestionSpecTest
 {
-  private static final ObjectMapper MAPPER = TestHelper.makeJsonMapper();
+  private static final ObjectMapper MAPPER = TestHelper.getJsonMapper();
 
   @Test
   public void testSingleIntervalSerde() throws Exception

@@ -21,13 +21,14 @@ package io.druid.server.coordination;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
+import io.druid.TestUtil;
 import io.druid.curator.CuratorTestBase;
+import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.Intervals;
 import io.druid.segment.IndexIO;
 import io.druid.segment.loading.SegmentLoaderConfig;
 import io.druid.server.SegmentManager;
-import io.druid.server.ServerTestHelper;
 import io.druid.server.initialization.ZkPathsConfig;
 import io.druid.server.metrics.NoopServiceEmitter;
 import io.druid.timeline.DataSegment;
@@ -47,7 +48,7 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 public class ZkCoordinatorTest extends CuratorTestBase
 {
-  private final ObjectMapper jsonMapper = ServerTestHelper.MAPPER;
+  private final ObjectMapper jsonMapper = new DefaultObjectMapper();
   private final DruidServerMetadata me = new DruidServerMetadata(
       "dummyServer",
       "dummyHost",
@@ -101,7 +102,7 @@ public class ZkCoordinatorTest extends CuratorTestBase
     CountDownLatch dropLatch = new CountDownLatch(1);
 
     SegmentLoadDropHandler segmentLoadDropHandler = new SegmentLoadDropHandler(
-        ServerTestHelper.MAPPER,
+        TestUtil.MAPPER,
         new SegmentLoaderConfig(),
         EasyMock.createNiceMock(DataSegmentAnnouncer.class),
         EasyMock.createNiceMock(DataSegmentServerAnnouncer.class),

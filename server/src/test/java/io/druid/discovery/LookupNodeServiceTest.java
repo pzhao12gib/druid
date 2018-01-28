@@ -35,7 +35,7 @@ public class LookupNodeServiceTest
         "tier"
     );
 
-    ObjectMapper mapper = TestHelper.makeJsonMapper();
+    ObjectMapper mapper = TestHelper.getJsonMapper();
     DruidService actual = mapper.readValue(
         mapper.writeValueAsString(expected),
         DruidService.class

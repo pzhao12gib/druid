@@ -403,7 +403,8 @@ public class Lifecycle
         for (Annotation annotation : method.getAnnotations()) {
           if (annotation.annotationType()
                         .getCanonicalName()
-                        .equals("io.druid.java.util.common.lifecycle.LifecycleStart")) {
+                        .equals("io.druid.java.util.common.lifecycle.LifecycleStart") ||
+              annotation.annotationType().getCanonicalName().equals("com.metamx.common.lifecycle.LifecycleStart")) {
             doStart = true;
             break;
           }
@@ -423,7 +424,8 @@ public class Lifecycle
         for (Annotation annotation : method.getAnnotations()) {
           if (annotation.annotationType()
                         .getCanonicalName()
-                        .equals("io.druid.java.util.common.lifecycle.LifecycleStop")) {
+                        .equals("io.druid.java.util.common.lifecycle.LifecycleStop") ||
+              annotation.annotationType().getCanonicalName().equals("com.metamx.common.lifecycle.LifecycleStop")) {
             doStop = true;
             break;
           }

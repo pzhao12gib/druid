@@ -92,7 +92,7 @@ public class TimeseriesQueryQueryToolChestTest
 
     Object preparedValue = strategy.prepareForCache().apply(result);
 
-    ObjectMapper objectMapper = TestHelper.makeJsonMapper();
+    ObjectMapper objectMapper = TestHelper.getJsonMapper();
     Object fromCacheValue = objectMapper.readValue(
         objectMapper.writeValueAsBytes(preparedValue),
         strategy.getCacheObjectClazz()

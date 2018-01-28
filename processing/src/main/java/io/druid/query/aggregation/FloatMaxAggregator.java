@@ -37,13 +37,20 @@ public class FloatMaxAggregator implements Aggregator
   public FloatMaxAggregator(BaseFloatColumnValueSelector selector)
   {
     this.selector = selector;
-    this.max = Float.NEGATIVE_INFINITY;
+
+    reset();
   }
 
   @Override
   public void aggregate()
   {
     max = Math.max(max, selector.getFloat());
+  }
+
+  @Override
+  public void reset()
+  {
+    max = Float.NEGATIVE_INFINITY;
   }
 
   @Override

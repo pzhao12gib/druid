@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
 import io.druid.common.guava.ThreadRenamingCallable;
 import io.druid.java.util.common.concurrent.Execs;
 import io.druid.data.input.Committer;
@@ -155,7 +155,7 @@ public class AppenderatorPlumber implements Plumber
     final int numRows;
 
     try {
-      numRows = appenderator.add(identifier, row, committerSupplier).getNumRowsInSegment();
+      numRows = appenderator.add(identifier, row, committerSupplier);
       lastCommitterSupplier = committerSupplier;
       return numRows;
     }

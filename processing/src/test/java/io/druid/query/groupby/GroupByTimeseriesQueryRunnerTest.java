@@ -50,6 +50,7 @@ import org.junit.runners.Parameterized;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -146,8 +147,10 @@ public class GroupByTimeseriesQueryRunnerTest extends TimeseriesQueryRunnerTest
                                   .granularity(Granularities.ALL)
                                   .intervals(QueryRunnerTestHelper.fullOnInterval)
                                   .aggregators(
-                                      new DoubleMaxAggregatorFactory("maxIndex", "index"),
-                                      new DoubleMinAggregatorFactory("minIndex", "index")
+                                      Arrays.asList(
+                                          new DoubleMaxAggregatorFactory("maxIndex", "index"),
+                                          new DoubleMinAggregatorFactory("minIndex", "index")
+                                      )
                                   )
                                   .descending(descending)
                                   .build();
@@ -155,7 +158,10 @@ public class GroupByTimeseriesQueryRunnerTest extends TimeseriesQueryRunnerTest
     DateTime expectedEarliest = DateTimes.of("1970-01-01");
     DateTime expectedLast = DateTimes.of("2011-04-15");
 
-    Iterable<Result<TimeseriesResultValue>> results = runner.run(QueryPlus.wrap(query), CONTEXT).toList();
+    Iterable<Result<TimeseriesResultValue>> results = Sequences.toList(
+        runner.run(QueryPlus.wrap(query), CONTEXT),
+        Lists.<Result<TimeseriesResultValue>>newArrayList()
+    );
     Result<TimeseriesResultValue> result = results.iterator().next();
 
     Assert.assertEquals(expectedEarliest, result.getTimestamp());

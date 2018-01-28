@@ -122,7 +122,7 @@ public class MapLookupExtractorFactory implements LookupExtractorFactory
 
   public static class MapLookupIntrospectionHandler implements LookupIntrospectHandler
   {
-    private final Map<String, String> map;
+    final private Map<String, String> map;
     public MapLookupIntrospectionHandler(Map<String, String> map)
     {
       this.map = map;

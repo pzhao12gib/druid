@@ -57,6 +57,12 @@ public class HistogramAggregator implements Aggregator
   }
 
   @Override
+  public void reset()
+  {
+    this.histogram = new Histogram(histogram.breaks);
+  }
+
+  @Override
   public Object get()
   {
     return this.histogram;

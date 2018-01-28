@@ -106,6 +106,8 @@ public abstract class AbstractTextFilesFirehoseFactory<T>
    * @param object an object to be read
    *
    * @return an input stream for the object
+   *
+   * @throws IOException
    */
   protected abstract InputStream openObjectStream(T object) throws IOException;
 
@@ -115,7 +117,8 @@ public abstract class AbstractTextFilesFirehoseFactory<T>
    *
    * @param object an input object
    * @param stream a stream for the object
-   * @return an wrapped input stream
+   * @return
+   * @throws IOException
    */
   protected abstract InputStream wrapObjectStream(T object, InputStream stream) throws IOException;
 }

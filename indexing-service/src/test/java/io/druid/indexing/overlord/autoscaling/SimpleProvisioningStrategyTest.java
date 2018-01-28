@@ -24,11 +24,12 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.druid.java.util.emitter.EmittingLogger;
-import io.druid.java.util.emitter.service.ServiceEmitter;
-import io.druid.java.util.emitter.service.ServiceEventBuilder;
+import com.metamx.emitter.EmittingLogger;
+import com.metamx.emitter.service.ServiceEmitter;
+import com.metamx.emitter.service.ServiceEventBuilder;
 import io.druid.common.guava.DSuppliers;
-import io.druid.indexer.TaskLocation;
+import io.druid.java.util.common.concurrent.Execs;
+import io.druid.indexing.common.TaskLocation;
 import io.druid.indexing.common.TaskStatus;
 import io.druid.indexing.common.TestTasks;
 import io.druid.indexing.common.task.NoopTask;
@@ -37,13 +38,12 @@ import io.druid.indexing.overlord.ImmutableWorkerInfo;
 import io.druid.indexing.overlord.RemoteTaskRunner;
 import io.druid.indexing.overlord.RemoteTaskRunnerWorkItem;
 import io.druid.indexing.overlord.ZkWorker;
-import io.druid.indexing.overlord.setup.DefaultWorkerBehaviorConfig;
 import io.druid.indexing.overlord.setup.WorkerBehaviorConfig;
+import io.druid.indexing.overlord.setup.DefaultWorkerBehaviorConfig;
 import io.druid.indexing.worker.TaskAnnouncement;
 import io.druid.indexing.worker.Worker;
 import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.DateTimes;
-import io.druid.java.util.common.concurrent.Execs;
 import org.easymock.EasyMock;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -125,8 +125,7 @@ public class SimpleProvisioningStrategyTest
     RemoteTaskRunner runner = EasyMock.createMock(RemoteTaskRunner.class);
     EasyMock.expect(runner.getPendingTasks()).andReturn(
         Collections.singletonList(
-            new RemoteTaskRunnerWorkItem(testTask.getId(), testTask.getType(), null, null)
-                .withQueueInsertionTime(DateTimes.nowUtc())
+            new RemoteTaskRunnerWorkItem(testTask.getId(), null, null).withQueueInsertionTime(DateTimes.nowUtc())
         )
     );
     EasyMock.expect(runner.getWorkers()).andReturn(
@@ -163,8 +162,7 @@ public class SimpleProvisioningStrategyTest
     RemoteTaskRunner runner = EasyMock.createMock(RemoteTaskRunner.class);
     EasyMock.expect(runner.getPendingTasks()).andReturn(
         Collections.singletonList(
-            new RemoteTaskRunnerWorkItem(testTask.getId(), testTask.getType(), null, null)
-                .withQueueInsertionTime(DateTimes.nowUtc())
+            new RemoteTaskRunnerWorkItem(testTask.getId(), null, null).withQueueInsertionTime(DateTimes.nowUtc())
         )
     ).times(2);
     EasyMock.expect(runner.getWorkers()).andReturn(
@@ -222,8 +220,7 @@ public class SimpleProvisioningStrategyTest
     RemoteTaskRunner runner = EasyMock.createMock(RemoteTaskRunner.class);
     EasyMock.expect(runner.getPendingTasks()).andReturn(
         Collections.singletonList(
-            new RemoteTaskRunnerWorkItem(testTask.getId(), testTask.getType(), null, null)
-                .withQueueInsertionTime(DateTimes.nowUtc())
+            new RemoteTaskRunnerWorkItem(testTask.getId(), null, null).withQueueInsertionTime(DateTimes.nowUtc())
         )
     ).times(2);
     EasyMock.expect(runner.getWorkers()).andReturn(
@@ -275,8 +272,7 @@ public class SimpleProvisioningStrategyTest
     RemoteTaskRunner runner = EasyMock.createMock(RemoteTaskRunner.class);
     EasyMock.expect(runner.getPendingTasks()).andReturn(
         Collections.singletonList(
-            new RemoteTaskRunnerWorkItem(testTask.getId(), testTask.getType(), null, null)
-                .withQueueInsertionTime(DateTimes.nowUtc())
+            new RemoteTaskRunnerWorkItem(testTask.getId(), null, null).withQueueInsertionTime(DateTimes.nowUtc())
         )
     ).times(2);
     EasyMock.expect(runner.getWorkers()).andReturn(
@@ -316,8 +312,7 @@ public class SimpleProvisioningStrategyTest
     RemoteTaskRunner runner = EasyMock.createMock(RemoteTaskRunner.class);
     EasyMock.expect(runner.getPendingTasks()).andReturn(
         Collections.singletonList(
-            new RemoteTaskRunnerWorkItem(testTask.getId(), testTask.getType(), null, null)
-                .withQueueInsertionTime(DateTimes.nowUtc())
+            new RemoteTaskRunnerWorkItem(testTask.getId(), null, null).withQueueInsertionTime(DateTimes.nowUtc())
         )
     ).times(2);
     EasyMock.expect(runner.getWorkers()).andReturn(
@@ -364,8 +359,7 @@ public class SimpleProvisioningStrategyTest
     RemoteTaskRunner runner = EasyMock.createMock(RemoteTaskRunner.class);
     EasyMock.expect(runner.getPendingTasks()).andReturn(
         Collections.singletonList(
-            new RemoteTaskRunnerWorkItem(testTask.getId(), testTask.getType(), null, null)
-                .withQueueInsertionTime(DateTimes.nowUtc())
+            new RemoteTaskRunnerWorkItem(testTask.getId(), null, null).withQueueInsertionTime(DateTimes.nowUtc())
         )
     ).times(2);
     EasyMock.expect(runner.getWorkers()).andReturn(
@@ -468,8 +462,7 @@ public class SimpleProvisioningStrategyTest
     RemoteTaskRunner runner = EasyMock.createMock(RemoteTaskRunner.class);
     EasyMock.expect(runner.getPendingTasks()).andReturn(
         Collections.singletonList(
-            new RemoteTaskRunnerWorkItem(testTask.getId(), testTask.getType(), null, null)
-                .withQueueInsertionTime(DateTimes.nowUtc())
+            new RemoteTaskRunnerWorkItem(testTask.getId(), null, null).withQueueInsertionTime(DateTimes.nowUtc())
         )
     ).times(2);
     EasyMock.expect(runner.getWorkers()).andReturn(

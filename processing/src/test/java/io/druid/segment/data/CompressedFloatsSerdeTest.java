@@ -20,10 +20,10 @@
 package io.druid.segment.data;
 
 import com.google.common.base.Supplier;
+import com.google.common.io.ByteSink;
 import com.google.common.primitives.Floats;
 import io.druid.java.util.common.StringUtils;
 import io.druid.java.util.common.guava.CloseQuietly;
-import io.druid.segment.writeout.OffHeapMemorySegmentWriteOutMedium;
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,6 +32,7 @@ import org.junit.runners.Parameterized;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.Channels;
@@ -49,7 +50,7 @@ public class CompressedFloatsSerdeTest
   public static Iterable<Object[]> compressionStrategies()
   {
     List<Object[]> data = new ArrayList<>();
-    for (CompressionStrategy strategy : CompressionStrategy.values()) {
+    for (CompressedObjectStrategy.CompressionStrategy strategy : CompressedObjectStrategy.CompressionStrategy.values()) {
       data.add(new Object[]{strategy, ByteOrder.BIG_ENDIAN});
       data.add(new Object[]{strategy, ByteOrder.LITTLE_ENDIAN});
     }
@@ -58,7 +59,7 @@ public class CompressedFloatsSerdeTest
 
   private static final double DELTA = 0.00001;
 
-  protected final CompressionStrategy compressionStrategy;
+  protected final CompressedObjectStrategy.CompressionStrategy compressionStrategy;
   protected final ByteOrder order;
 
   private final float values0[] = {};
@@ -74,7 +75,7 @@ public class CompressedFloatsSerdeTest
   };
 
   public CompressedFloatsSerdeTest(
-      CompressionStrategy compressionStrategy,
+      CompressedObjectStrategy.CompressionStrategy compressionStrategy,
       ByteOrder order
   )
   {
@@ -107,11 +108,7 @@ public class CompressedFloatsSerdeTest
 
   public void testWithValues(float[] values) throws Exception
   {
-    ColumnarFloatsSerializer serializer = CompressionFactory.getFloatSerializer(
-        new OffHeapMemorySegmentWriteOutMedium(),
-        "test",
-        order,
-        compressionStrategy
+    FloatSupplierSerializer serializer = CompressionFactory.getFloatSerializer(new IOPeonForTesting(), "test", order, compressionStrategy
     );
     serializer.open();
 
@@ -121,11 +118,20 @@ public class CompressedFloatsSerdeTest
     Assert.assertEquals(values.length, serializer.size());
 
     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    serializer.writeTo(Channels.newChannel(baos), null);
+    serializer.closeAndConsolidate(
+        new ByteSink()
+        {
+          @Override
+          public OutputStream openStream() throws IOException
+          {
+            return baos;
+          }
+        }
+    );
     Assert.assertEquals(baos.size(), serializer.getSerializedSize());
-    CompressedColumnarFloatsSupplier supplier = CompressedColumnarFloatsSupplier
-        .fromByteBuffer(ByteBuffer.wrap(baos.toByteArray()), order);
-    ColumnarFloats floats = supplier.get();
+    CompressedFloatsIndexedSupplier supplier = CompressedFloatsIndexedSupplier
+        .fromByteBuffer(ByteBuffer.wrap(baos.toByteArray()), order, null);
+    IndexedFloats floats = supplier.get();
 
     assertIndexMatchesVals(floats, values);
     for (int i = 0; i < 10; i++) {
@@ -141,7 +147,7 @@ public class CompressedFloatsSerdeTest
     floats.close();
   }
 
-  private void tryFill(ColumnarFloats indexed, float[] vals, final int startIndex, final int size)
+  private void tryFill(IndexedFloats indexed, float[] vals, final int startIndex, final int size)
   {
     float[] filled = new float[size];
     indexed.fill(startIndex, filled);
@@ -151,7 +157,7 @@ public class CompressedFloatsSerdeTest
     }
   }
 
-  private void assertIndexMatchesVals(ColumnarFloats indexed, float[] vals)
+  private void assertIndexMatchesVals(IndexedFloats indexed, float[] vals)
   {
     Assert.assertEquals(vals.length, indexed.size());
 
@@ -171,25 +177,25 @@ public class CompressedFloatsSerdeTest
     }
   }
 
-  private void testSupplierSerde(CompressedColumnarFloatsSupplier supplier, float[] vals) throws IOException
+  private void testSupplierSerde(CompressedFloatsIndexedSupplier supplier, float[] vals) throws IOException
   {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    supplier.writeTo(Channels.newChannel(baos), null);
+    supplier.writeToChannel(Channels.newChannel(baos));
 
     final byte[] bytes = baos.toByteArray();
     Assert.assertEquals(supplier.getSerializedSize(), bytes.length);
-    CompressedColumnarFloatsSupplier anotherSupplier = CompressedColumnarFloatsSupplier.fromByteBuffer(
-        ByteBuffer.wrap(bytes), order
+    CompressedFloatsIndexedSupplier anotherSupplier = CompressedFloatsIndexedSupplier.fromByteBuffer(
+        ByteBuffer.wrap(bytes), order, null
     );
-    ColumnarFloats indexed = anotherSupplier.get();
+    IndexedFloats indexed = anotherSupplier.get();
     assertIndexMatchesVals(indexed, vals);
   }
 
   // This test attempts to cause a race condition with the DirectByteBuffers, it's non-deterministic in causing it,
   // which sucks but I can't think of a way to deterministically cause it...
   private void testConcurrentThreadReads(
-      final Supplier<ColumnarFloats> supplier,
-      final ColumnarFloats indexed, final float[] vals
+      final Supplier<IndexedFloats> supplier,
+      final IndexedFloats indexed, final float[] vals
   ) throws Exception
   {
     final AtomicReference<String> reason = new AtomicReference<String>("none");
@@ -237,7 +243,7 @@ public class CompressedFloatsSerdeTest
       }
     }).start();
 
-    final ColumnarFloats indexed2 = supplier.get();
+    final IndexedFloats indexed2 = supplier.get();
     try {
       new Thread(new Runnable()
       {

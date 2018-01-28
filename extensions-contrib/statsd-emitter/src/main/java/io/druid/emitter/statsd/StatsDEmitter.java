@@ -22,9 +22,9 @@ package io.druid.emitter.statsd;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import io.druid.java.util.emitter.core.Emitter;
-import io.druid.java.util.emitter.core.Event;
-import io.druid.java.util.emitter.service.ServiceMetricEvent;
+import com.metamx.emitter.core.Emitter;
+import com.metamx.emitter.core.Event;
+import com.metamx.emitter.service.ServiceMetricEvent;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import com.timgroup.statsd.StatsDClientErrorHandler;
@@ -38,10 +38,9 @@ import java.util.Map;
 public class StatsDEmitter implements Emitter
 {
 
-  private static final Logger log = new Logger(StatsDEmitter.class);
-  private static final String DRUID_METRIC_SEPARATOR = "\\/";
-  private static final String STATSD_SEPARATOR = ":|\\|";
-  private static final String BLANK = "\\s+";
+  private final static Logger log = new Logger(StatsDEmitter.class);
+  private final static String DRUID_METRIC_SEPARATOR = "\\/";
+  private final static String STATSD_SEPARATOR = ":|\\|";
 
   static final StatsDEmitter of(StatsDEmitterConfig config, ObjectMapper mapper)
   {
@@ -105,8 +104,7 @@ public class StatsDEmitter implements Emitter
         String fullName = Joiner.on(config.getSeparator())
                                 .join(nameBuilder.build())
                                 .replaceAll(DRUID_METRIC_SEPARATOR, config.getSeparator())
-                                .replaceAll(STATSD_SEPARATOR, config.getSeparator())
-                                .replaceAll(BLANK, config.getBlankHolder());
+                                .replaceAll(STATSD_SEPARATOR, config.getSeparator());
 
         long val = statsDMetric.convertRange ? Math.round(value.doubleValue() * 100) : value.longValue();
         switch (statsDMetric.type) {

@@ -21,16 +21,16 @@ package io.druid.server.security;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.druid.java.util.http.client.HttpClient;
+import com.metamx.http.client.HttpClient;
 
-/**
- * This interface provides methods needed for escalating internal system requests with priveleged authentication
- * credentials. Each Escalator is associated with a specific authentication scheme, like Authenticators.
- */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", defaultImpl = NoopEscalator.class)
 @JsonSubTypes(value = {
     @JsonSubTypes.Type(name = "noop", value = NoopEscalator.class),
 })
+/**
+ * This interface provides methods needed for escalating internal system requests with priveleged authentication
+ * credentials. Each Escalator is associated with a specific authentication scheme, like Authenticators.
+ */
 public interface Escalator
 {
   /**

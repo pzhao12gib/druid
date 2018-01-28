@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import io.druid.data.input.MapBasedRow;
 import io.druid.java.util.common.granularity.Granularities;
 import io.druid.java.util.common.guava.Sequence;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.query.aggregation.AggregationTestHelper;
 import io.druid.query.groupby.GroupByQueryConfig;
 import io.druid.query.groupby.GroupByQueryRunnerTest;
@@ -139,6 +140,6 @@ public class ApproximateHistogramAggregationTest
         query
     );
 
-    return (MapBasedRow) seq.toList().get(0);
+    return (MapBasedRow) Sequences.toList(seq, Lists.newArrayList()).get(0);
   }
 }

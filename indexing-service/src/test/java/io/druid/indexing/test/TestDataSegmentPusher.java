@@ -48,7 +48,7 @@ public class TestDataSegmentPusher implements DataSegmentPusher
   }
 
   @Override
-  public DataSegment push(File file, DataSegment segment, boolean replaceExisting) throws IOException
+  public DataSegment push(File file, DataSegment segment) throws IOException
   {
     pushedSegments.add(segment);
     return segment;

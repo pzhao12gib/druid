@@ -24,9 +24,9 @@ import io.druid.java.util.common.lifecycle.Lifecycle;
 
 public class LifecycleUtils
 {
-  public static Lifecycle asMmxLifecycle(Lifecycle lifecycle)
+  public static com.metamx.common.lifecycle.Lifecycle asMmxLifecycle(Lifecycle lifecycle)
   {
-    final Lifecycle metamxLifecycle = new Lifecycle();
+    final com.metamx.common.lifecycle.Lifecycle metamxLifecycle = new com.metamx.common.lifecycle.Lifecycle();
     try {
       lifecycle.addMaybeStartHandler(new Lifecycle.Handler()
       {

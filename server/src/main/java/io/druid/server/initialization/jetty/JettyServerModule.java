@@ -33,10 +33,10 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import io.druid.java.util.emitter.service.ServiceEmitter;
-import io.druid.java.util.emitter.service.ServiceMetricEvent;
-import io.druid.java.util.metrics.AbstractMonitor;
-import io.druid.java.util.metrics.MonitorUtils;
+import com.metamx.emitter.service.ServiceEmitter;
+import com.metamx.emitter.service.ServiceMetricEvent;
+import com.metamx.metrics.AbstractMonitor;
+import com.metamx.metrics.MonitorUtils;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
@@ -218,9 +218,7 @@ public class JettyServerModule extends JerseyServletModule
 
     if (node.isEnablePlaintextPort()) {
       log.info("Creating http connector with port [%d]", node.getPlaintextPort());
-      HttpConfiguration httpConfiguration = new HttpConfiguration();
-      httpConfiguration.setRequestHeaderSize(config.getMaxRequestHeaderSize());
-      final ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory(httpConfiguration));
+      final ServerConnector connector = new ServerConnector(server);
       connector.setPort(node.getPlaintextPort());
       serverConnectors.add(connector);
     }
@@ -266,7 +264,6 @@ public class JettyServerModule extends JerseyServletModule
       httpsConfiguration.setSecureScheme("https");
       httpsConfiguration.setSecurePort(node.getTlsPort());
       httpsConfiguration.addCustomizer(new SecureRequestCustomizer());
-      httpsConfiguration.setRequestHeaderSize(config.getMaxRequestHeaderSize());
       final ServerConnector connector = new ServerConnector(
           server,
           new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.toString()),

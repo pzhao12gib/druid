@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Druid - a distributed column store.
   ~ Copyright 2012 - 2015 Metamarkets Group Inc.
@@ -15,9 +14,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -27,7 +24,7 @@
     </parent>
 
     <artifactId>druid</artifactId>
-    <version>0.12.0-SNAPSHOT</version>
+    <version>0.11.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -54,7 +51,7 @@
         <connection>scm:git:ssh://git@github.com/druid-io/druid.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/druid-io/druid.git</developerConnection>
         <url>https://github.com/druid-io/druid.git</url>
-        <tag>0.12.0-SNAPSHOT</tag>
+        <tag>0.11.1-SNAPSHOT</tag>
     </scm>
 
     <properties>
@@ -62,8 +59,7 @@
         <apache.curator.version>4.0.0</apache.curator.version>
         <apache.curator.test.version>2.12.0</apache.curator.test.version>
         <avatica.version>1.10.0</avatica.version>
-        <calcite.version>1.15.0</calcite.version>
-        <fastutil.version>8.1.0</fastutil.version>
+        <calcite.version>1.14.0</calcite.version>
         <guava.version>16.0.1</guava.version>
         <guice.version>4.1.0</guice.version>
         <jetty.version>9.3.19.v20170502</jetty.version>
@@ -71,11 +67,9 @@
         <!-- Watch out for Hadoop compatibility when updating to >= 2.5; see https://github.com/druid-io/druid/pull/1669 -->
         <jackson.version>2.4.6</jackson.version>
         <log4j.version>2.5</log4j.version>
-        <!-- HttpClient has not yet been ported to Netty 4.x -->
-        <netty3.version>3.10.6.Final</netty3.version>
         <!-- Update to Netty 4.1 is not possible yet, see https://github.com/druid-io/druid/issues/4390 and comments
              in https://github.com/druid-io/druid/pull/4973 -->
-        <netty4.version>4.0.52.Final</netty4.version>
+        <netty.version>4.0.52.Final</netty.version>
         <slf4j.version>1.7.12</slf4j.version>
         <!-- If compiling with different hadoop version also modify default hadoop coordinates in TaskConfig.java -->
         <hadoop.compile.version>2.7.3</hadoop.compile.version>
@@ -85,8 +79,11 @@
         Need to update Druid to use Jackson 2.6+ -->
         <aws.sdk.version>1.10.77</aws.sdk.version>
         <caffeine.version>2.5.5</caffeine.version>
+
         <!-- When upgrading ZK, edit docs and integration tests as well (integration-tests/docker-base/setup.sh) -->
-        <zookeeper.version>3.4.11</zookeeper.version>
+        <zookeeper.version>3.4.10</zookeeper.version>
+    <gib.referenceBranch>HEAD^1</gib.referenceBranch>
+        <gib.enabled>true</gib.enabled>
     </properties>
 
     <modules>
@@ -103,6 +100,7 @@
         <module>benchmarks</module>
         <module>aws-common</module>
         <module>java-util</module>
+        <module>bytebuffer-collections</module>
         <module>extendedset</module>
         <module>hll</module>
         <!-- Core extensions -->
@@ -122,7 +120,6 @@
         <module>extensions-core/lookups-cached-single</module>
         <module>extensions-core/s3-extensions</module>
         <module>extensions-core/simple-client-sslcontext</module>
-        <module>extensions-core/druid-basic-security</module>
         <!-- Community extensions -->
         <module>extensions-contrib/azure-extensions</module>
         <module>extensions-contrib/cassandra-storage</module>
@@ -150,6 +147,11 @@
     <dependencyManagement>
         <dependencies>
             <!-- Compile Scope -->
+            <dependency>
+                <groupId>com.metamx</groupId>
+                <artifactId>java-util</artifactId>
+                <version>1.3.2</version>
+            </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
@@ -224,7 +226,7 @@
             <dependency>
                 <groupId>com.ning</groupId>
                 <artifactId>compress-lzf</artifactId>
-                <version>1.0.4</version>
+                <version>1.0.3</version>
             </dependency>
             <dependency>
                 <groupId>io.airlift</groupId>
@@ -482,13 +484,8 @@
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
-                <artifactId>netty</artifactId>
-                <version>${netty3.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
-                <version>${netty4.version}</version>
+                <version>${netty.version}</version>
             </dependency>
             <dependency>
                 <groupId>joda-time</groupId>
@@ -644,12 +641,6 @@
                 <artifactId>hadoop-client</artifactId>
                 <version>${hadoop.compile.version}</version>
                 <scope>provided</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.avro</groupId>
-                        <artifactId>avro</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.mapdb</groupId>
@@ -711,18 +702,6 @@
                 <artifactId>asm-commons</artifactId>
                 <version>5.2</version>
             </dependency>
-            <dependency>
-                <groupId>org.asynchttpclient</groupId>
-                <artifactId>async-http-client</artifactId>
-                <version>2.0.37</version>
-            </dependency>
-            <dependency>
-                <groupId>org.gridkit.lab</groupId>
-                <artifactId>jvm-attach-api</artifactId>
-                <version>1.2</version>
-            </dependency>
-
-            <!-- Test Scope -->
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
@@ -1177,6 +1156,13 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+    <extensions>
+            <extension>
+                <groupId>com.vackosar.gitflowincrementalbuilder</groupId>
+                <artifactId>gitflow-incremental-builder</artifactId>
+                <version>3.4</version>
+            </extension>
+        </extensions>
     </build>
 
     <profiles>
@@ -1294,3 +1280,4 @@
         </profile>
     </profiles>
 </project>
+

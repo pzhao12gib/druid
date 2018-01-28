@@ -22,7 +22,7 @@ package io.druid.server.metrics;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import io.druid.java.util.metrics.Monitor;
+import com.metamx.metrics.Monitor;
 import io.druid.query.DruidMetrics;
 
 import javax.validation.constraints.NotNull;
@@ -35,7 +35,7 @@ import java.util.Properties;
  */
 public class MonitorsConfig
 {
-  public static final String METRIC_DIMENSION_PREFIX = "druid.metrics.emitter.dimension.";
+  public final static String METRIC_DIMENSION_PREFIX = "druid.metrics.emitter.dimension.";
 
   @JsonProperty("monitors")
   @NotNull

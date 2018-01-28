@@ -63,9 +63,7 @@ public class VSizeLongSerde
     return (bitsPerValue * numValues + 7) / 8 + 4;
   }
 
-  /**
-   * Block size should be power of 2, so {@link ColumnarLongs#get(int)} can be optimized using bit operators.
-   */
+  // block size should be power of 2 so get of indexedLong can be optimized using bit operators
   public static int getNumValuesPerBlock(int bitsPerValue, int blockSize)
   {
     int ret = 1;
@@ -193,7 +191,6 @@ public class VSizeLongSerde
     ByteBuffer buffer;
     byte curByte = 0;
     int count = 0;
-    private boolean closed = false;
 
     public Size1Ser(OutputStream output)
     {
@@ -225,9 +222,6 @@ public class VSizeLongSerde
     @Override
     public void close() throws IOException
     {
-      if (closed) {
-        return;
-      }
       buffer.put((byte) (curByte << (8 - count)));
       if (output != null) {
         output.write(buffer.array());
@@ -236,7 +230,6 @@ public class VSizeLongSerde
       } else {
         buffer.putInt(0);
       }
-      closed = true;
     }
   }
 
@@ -246,7 +239,6 @@ public class VSizeLongSerde
     ByteBuffer buffer;
     byte curByte = 0;
     int count = 0;
-    private boolean closed = false;
 
     public Size2Ser(OutputStream output)
     {
@@ -278,9 +270,6 @@ public class VSizeLongSerde
     @Override
     public void close() throws IOException
     {
-      if (closed) {
-        return;
-      }
       buffer.put((byte) (curByte << (8 - count)));
       if (output != null) {
         output.write(buffer.array());
@@ -289,7 +278,6 @@ public class VSizeLongSerde
       } else {
         buffer.putInt(0);
       }
-      closed = true;
     }
   }
 
@@ -301,7 +289,6 @@ public class VSizeLongSerde
     int numBytes;
     byte curByte = 0;
     boolean first = true;
-    private boolean closed = false;
 
     public Mult4Ser(OutputStream output, int numBytes)
     {
@@ -342,9 +329,6 @@ public class VSizeLongSerde
     @Override
     public void close() throws IOException
     {
-      if (closed) {
-        return;
-      }
       if (!first) {
         buffer.put((byte) (curByte << 4));
       }
@@ -355,7 +339,6 @@ public class VSizeLongSerde
       } else {
         buffer.putInt(0);
       }
-      closed = true;
     }
   }
 
@@ -364,7 +347,6 @@ public class VSizeLongSerde
     OutputStream output;
     ByteBuffer buffer;
     int numBytes;
-    private boolean closed = false;
 
     public Mult8Ser(OutputStream output, int numBytes)
     {
@@ -395,16 +377,12 @@ public class VSizeLongSerde
     @Override
     public void close() throws IOException
     {
-      if (closed) {
-        return;
-      }
       if (output != null) {
         output.write(EMPTY);
         output.flush();
       } else {
         buffer.putInt(0);
       }
-      closed = true;
     }
   }
 

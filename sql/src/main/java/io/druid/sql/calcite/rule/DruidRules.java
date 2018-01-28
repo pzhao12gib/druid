@@ -129,7 +129,7 @@ public class DruidRules
     }
   }
 
-  public abstract static class DruidOuterQueryRule extends RelOptRule
+  public static abstract class DruidOuterQueryRule extends RelOptRule
   {
     public static RelOptRule AGGREGATE = new DruidOuterQueryRule(
         operand(Aggregate.class, operand(DruidRel.class, any())),

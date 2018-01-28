@@ -203,14 +203,11 @@ public class RowBasedColumnSelectorFactory implements ColumnSelectorFactory
     } else {
       return new DimensionSelector()
       {
-        private final RangeIndexedInts indexedInts = new RangeIndexedInts();
-
         @Override
         public IndexedInts getRow()
         {
           final List<String> dimensionValues = row.get().getDimension(dimension);
-          indexedInts.setSize(dimensionValues != null ? dimensionValues.size() : 0);
-          return indexedInts;
+          return RangeIndexedInts.create(dimensionValues != null ? dimensionValues.size() : 0);
         }
 
         @Override

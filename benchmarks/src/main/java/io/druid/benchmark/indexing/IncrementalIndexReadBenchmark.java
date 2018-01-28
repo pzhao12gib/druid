@@ -19,6 +19,7 @@
 
 package io.druid.benchmark.indexing;
 
+import com.google.common.collect.Lists;
 import io.druid.benchmark.datagen.BenchmarkDataGenerator;
 import io.druid.benchmark.datagen.BenchmarkSchemaInfo;
 import io.druid.benchmark.datagen.BenchmarkSchemas;
@@ -26,6 +27,7 @@ import io.druid.data.input.InputRow;
 import io.druid.hll.HyperLogLogHash;
 import io.druid.java.util.common.granularity.Granularities;
 import io.druid.java.util.common.guava.Sequence;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.java.util.common.logger.Logger;
 import io.druid.js.JavaScriptConfig;
 import io.druid.query.aggregation.hyperloglog.HyperUniquesSerde;
@@ -139,7 +141,7 @@ public class IncrementalIndexReadBenchmark
   {
     IncrementalIndexStorageAdapter sa = new IncrementalIndexStorageAdapter(incIndex);
     Sequence<Cursor> cursors = makeCursors(sa, null);
-    Cursor cursor = cursors.limit(1).toList().get(0);
+    Cursor cursor = Sequences.toList(Sequences.limit(cursors, 1), Lists.<Cursor>newArrayList()).get(0);
 
     List<DimensionSelector> selectors = new ArrayList<>();
     selectors.add(makeDimensionSelector(cursor, "dimSequential"));
@@ -174,7 +176,7 @@ public class IncrementalIndexReadBenchmark
 
     IncrementalIndexStorageAdapter sa = new IncrementalIndexStorageAdapter(incIndex);
     Sequence<Cursor> cursors = makeCursors(sa, filter);
-    Cursor cursor = cursors.limit(1).toList().get(0);
+    Cursor cursor = Sequences.toList(Sequences.limit(cursors, 1), Lists.<Cursor>newArrayList()).get(0);
 
     List<DimensionSelector> selectors = new ArrayList<>();
     selectors.add(makeDimensionSelector(cursor, "dimSequential"));

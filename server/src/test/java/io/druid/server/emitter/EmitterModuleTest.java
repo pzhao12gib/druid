@@ -24,14 +24,13 @@ import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import io.druid.java.util.emitter.core.Emitter;
-import io.druid.java.util.emitter.core.ParametrizedUriEmitter;
+import com.metamx.emitter.core.Emitter;
+import com.metamx.emitter.core.ParametrizedUriEmitter;
 import io.druid.guice.DruidGuiceExtensions;
 import io.druid.guice.JsonConfigurator;
 import io.druid.guice.LazySingleton;
 import io.druid.guice.LifecycleModule;
 import io.druid.guice.ServerModule;
-import io.druid.jackson.JacksonModule;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -68,7 +67,6 @@ public class EmitterModuleTest
             new DruidGuiceExtensions(),
             new LifecycleModule(),
             new ServerModule(),
-            new JacksonModule(),
             new Module()
             {
               @Override

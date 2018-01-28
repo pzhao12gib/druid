@@ -25,10 +25,9 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
-import io.druid.java.util.common.logger.Logger;
-import io.druid.java.util.emitter.core.Emitter;
-import io.druid.java.util.emitter.core.ParametrizedUriEmitter;
-import io.druid.java.util.emitter.core.ParametrizedUriEmitterConfig;
+import com.metamx.emitter.core.Emitter;
+import com.metamx.emitter.core.ParametrizedUriEmitter;
+import com.metamx.emitter.core.ParametrizedUriEmitterConfig;
 import io.druid.guice.JsonConfigProvider;
 import io.druid.guice.ManageLifecycle;
 import io.druid.java.util.common.lifecycle.Lifecycle;
@@ -38,13 +37,11 @@ import javax.net.ssl.SSLContext;
 
 public class ParametrizedUriEmitterModule implements Module
 {
-  private static final Logger log = new Logger(ParametrizedUriEmitterModule.class);
-
   @Override
   public void configure(Binder binder)
   {
     JsonConfigProvider.bind(binder, "druid.emitter.parametrized", ParametrizedUriEmitterConfig.class);
-    JsonConfigProvider.bind(binder, "druid.emitter.parametrized.httpEmitting", ParametrizedUriEmitterSSLClientConfig.class);
+    HttpEmitterModule.configureSsl(binder);
   }
 
   @Provides
@@ -52,20 +49,18 @@ public class ParametrizedUriEmitterModule implements Module
   @Named("parametrized")
   public Emitter getEmitter(
       Supplier<ParametrizedUriEmitterConfig> config,
-      Supplier<ParametrizedUriEmitterSSLClientConfig> parametrizedSSLClientConfig,
       @Nullable SSLContext sslContext,
       Lifecycle lifecycle,
       ObjectMapper jsonMapper
   )
   {
-    HttpEmitterSSLClientConfig sslConfig = parametrizedSSLClientConfig.get().getHttpEmittingSSLClientConfig();
     return new ParametrizedUriEmitter(
         config.get(),
         lifecycle.addCloseableInstance(
             HttpEmitterModule.createAsyncHttpClient(
                 "ParmetrizedUriEmitter-AsyncHttpClient-%d",
                 "ParmetrizedUriEmitter-AsyncHttpClient-Timer-%d",
-                HttpEmitterModule.getEffectiveSSLContext(sslConfig, sslContext)
+                sslContext
             )
         ),
         jsonMapper

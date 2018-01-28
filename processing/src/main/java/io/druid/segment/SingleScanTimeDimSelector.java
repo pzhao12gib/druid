@@ -38,7 +38,6 @@ public class SingleScanTimeDimSelector implements DimensionSelector
   private final boolean descending;
 
   private final List<String> timeValues = new ArrayList<>();
-  private final SingleIndexedInt row = new SingleIndexedInt();
   private String currentValue = null;
   private long currentTimestamp = Long.MIN_VALUE;
   private int index = -1;
@@ -62,8 +61,7 @@ public class SingleScanTimeDimSelector implements DimensionSelector
   @Override
   public IndexedInts getRow()
   {
-    row.setValue(getDimensionValueIndex());
-    return row;
+    return new SingleIndexedInt(getDimensionValueIndex());
   }
 
   @Override

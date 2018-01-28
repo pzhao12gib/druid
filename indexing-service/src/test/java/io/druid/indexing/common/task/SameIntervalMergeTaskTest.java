@@ -91,7 +91,6 @@ public class SameIntervalMergeTaskTest
         true,
         indexSpec,
         true,
-        null,
         null
     );
 
@@ -201,7 +200,7 @@ public class SameIntervalMergeTaskTest
               }
 
               @Override
-              public DataSegment push(File file, DataSegment segment, boolean replaceExisting) throws IOException
+              public DataSegment push(File file, DataSegment segment) throws IOException
               {
                 // the merged segment is pushed to storage
                 segments.add(segment);

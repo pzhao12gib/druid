@@ -20,8 +20,8 @@
 package io.druid.indexing.common.actions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.druid.java.util.http.client.Request;
-import io.druid.java.util.http.client.response.FullResponseHolder;
+import com.metamx.http.client.Request;
+import com.metamx.http.client.response.FullResponseHolder;
 import io.druid.discovery.DruidLeaderClient;
 import io.druid.indexing.common.RetryPolicyConfig;
 import io.druid.indexing.common.RetryPolicyFactory;
@@ -94,7 +94,7 @@ public class RemoteTaskActionClientTest
     replay(druidLeaderClient);
 
 
-    Task task = new NoopTask("id", null, 0, 0, null, null, null);
+    Task task = new NoopTask("id", 0, 0, null, null, null);
     RemoteTaskActionClient client = new RemoteTaskActionClient(
         task, druidLeaderClient, new RetryPolicyFactory(
         new RetryPolicyConfig()
@@ -134,7 +134,7 @@ public class RemoteTaskActionClientTest
     replay(druidLeaderClient);
 
 
-    Task task = new NoopTask("id", null, 0, 0, null, null, null);
+    Task task = new NoopTask("id", 0, 0, null, null, null);
     RemoteTaskActionClient client = new RemoteTaskActionClient(
         task, druidLeaderClient, new RetryPolicyFactory(
         objectMapper.readValue("{\"maxRetryCount\":0}", RetryPolicyConfig.class)

@@ -40,7 +40,7 @@ public class MetadataTest
   @Test
   public void testSerde() throws Exception
   {
-    ObjectMapper jsonMapper = TestHelper.makeJsonMapper();
+    ObjectMapper jsonMapper = TestHelper.getJsonMapper();
 
     Metadata metadata = new Metadata();
     metadata.put("k", "v");

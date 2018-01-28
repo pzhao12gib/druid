@@ -51,7 +51,7 @@ public abstract class HadoopTask extends AbstractTask
   private static final Logger log = new Logger(HadoopTask.class);
   private static final ExtensionsConfig extensionsConfig;
 
-  static final Injector injector = GuiceInjectors.makeStartupInjector();
+  final static Injector injector = GuiceInjectors.makeStartupInjector();
 
   static {
     extensionsConfig = injector.getInstance(ExtensionsConfig.class);

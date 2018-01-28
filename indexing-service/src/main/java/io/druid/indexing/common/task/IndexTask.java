@@ -79,7 +79,6 @@ import io.druid.segment.realtime.appenderator.SegmentsAndMetadata;
 import io.druid.segment.realtime.appenderator.TransactionalSegmentPublisher;
 import io.druid.segment.realtime.plumber.Committers;
 import io.druid.segment.realtime.plumber.NoopSegmentHandoffNotifierFactory;
-import io.druid.segment.writeout.SegmentWriteOutMediumFactory;
 import io.druid.timeline.DataSegment;
 import io.druid.timeline.partition.HashBasedNumberedShardSpec;
 import io.druid.timeline.partition.NoneShardSpec;
@@ -115,22 +114,6 @@ public class IndexTask extends AbstractTask
   private static final Logger log = new Logger(IndexTask.class);
   private static final HashFunction hashFunction = Hashing.murmur3_128();
   private static final String TYPE = "index";
-
-  private static String makeGroupId(IndexIngestionSpec ingestionSchema)
-  {
-    return makeGroupId(ingestionSchema.ioConfig.appendToExisting, ingestionSchema.dataSchema.getDataSource());
-  }
-
-  private static String makeGroupId(boolean isAppendToExisting, String dataSource)
-  {
-    if (isAppendToExisting) {
-      // Shared locking group for all tasks that append, since they are OK to run concurrently.
-      return StringUtils.format("%s_append_%s", TYPE, dataSource);
-    } else {
-      // Return null, one locking group per task.
-      return null;
-    }
-  }
 
   @JsonIgnore
   private final IndexIngestionSpec ingestionSchema;
@@ -171,6 +154,22 @@ public class IndexTask extends AbstractTask
     );
 
     this.ingestionSchema = ingestionSchema;
+  }
+
+  private static String makeGroupId(IndexIngestionSpec ingestionSchema)
+  {
+    return makeGroupId(ingestionSchema.ioConfig.appendToExisting, ingestionSchema.dataSchema.getDataSource());
+  }
+
+  private static String makeGroupId(boolean isAppendToExisting, String dataSource)
+  {
+    if (isAppendToExisting) {
+      // Shared locking group for all tasks that append, since they are OK to run concurrently.
+      return StringUtils.format("%s_append_%s", TYPE, dataSource);
+    } else {
+      // Return null, one locking group per task.
+      return null;
+    }
   }
 
   @Override
@@ -278,7 +277,7 @@ public class IndexTask extends AbstractTask
                    .filter(entry -> entry.getKey().contains(interval))
                    .map(Entry::getValue)
                    .findFirst()
-                   .orElseThrow(() -> new ISE("Cannot find a version for interval[%s]", interval));
+                   .orElse(null);
   }
 
   private static boolean isGuaranteedRollup(IndexIOConfig ioConfig, IndexTuningConfig tuningConfig)
@@ -623,7 +622,7 @@ public class IndexTask extends AbstractTask
         }
       }
 
-      segmentAllocator = (row, sequenceName, previousSegmentId, skipSegmentLineageCheck) -> lookup.get(sequenceName);
+      segmentAllocator = (row, sequenceName, previousSegmentId) -> lookup.get(sequenceName);
     } else if (ioConfig.isAppendToExisting()) {
       // Append mode: Allocate segments as needed using Overlord APIs.
       segmentAllocator = new ActionBasedSegmentAllocator(toolbox.getTaskActionClient(), dataSchema);
@@ -631,7 +630,7 @@ public class IndexTask extends AbstractTask
       // Overwrite mode, non-guaranteed rollup: We can make up our own segment ids but we don't know them in advance.
       final Map<Interval, AtomicInteger> counters = new HashMap<>();
 
-      segmentAllocator = (row, sequenceName, previousSegmentId, skipSegmentLineageCheck) -> {
+      segmentAllocator = (row, sequenceName, previousSegmentId) -> {
         final DateTime timestamp = row.getTimestamp();
         Optional<Interval> maybeInterval = granularitySpec.bucketInterval(timestamp);
         if (!maybeInterval.isPresent()) {
@@ -751,12 +750,6 @@ public class IndexTask extends AbstractTask
         log.error("Failed to publish segments, aborting!");
         return false;
       } else {
-        log.info(
-            "Processed[%,d] events, unparseable[%,d], thrownAway[%,d].",
-            fireDepartmentMetrics.processed(),
-            fireDepartmentMetrics.unparseable(),
-            fireDepartmentMetrics.thrownAway()
-        );
         log.info(
             "Published segments[%s]", Joiner.on(", ").join(
                 Iterables.transform(
@@ -971,8 +964,6 @@ public class IndexTask extends AbstractTask
     private final boolean forceGuaranteedRollup;
     private final boolean reportParseExceptions;
     private final long publishTimeout;
-    @Nullable
-    private final SegmentWriteOutMediumFactory segmentWriteOutMediumFactory;
 
     @JsonCreator
     public IndexTuningConfig(
@@ -988,8 +979,7 @@ public class IndexTask extends AbstractTask
         @JsonProperty("forceExtendableShardSpecs") @Nullable Boolean forceExtendableShardSpecs,
         @JsonProperty("forceGuaranteedRollup") @Nullable Boolean forceGuaranteedRollup,
         @JsonProperty("reportParseExceptions") @Nullable Boolean reportParseExceptions,
-        @JsonProperty("publishTimeout") @Nullable Long publishTimeout,
-        @JsonProperty("segmentWriteOutMediumFactory") @Nullable SegmentWriteOutMediumFactory segmentWriteOutMediumFactory
+        @JsonProperty("publishTimeout") @Nullable Long publishTimeout
     )
     {
       this(
@@ -1003,14 +993,13 @@ public class IndexTask extends AbstractTask
           forceGuaranteedRollup,
           reportParseExceptions,
           publishTimeout,
-          null,
-          segmentWriteOutMediumFactory
+          null
       );
     }
 
     private IndexTuningConfig()
     {
-      this(null, null, null, null, null, null, null, null, null, null, null, null);
+      this(null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private IndexTuningConfig(
@@ -1024,8 +1013,7 @@ public class IndexTask extends AbstractTask
         @Nullable Boolean forceGuaranteedRollup,
         @Nullable Boolean reportParseExceptions,
         @Nullable Long publishTimeout,
-        @Nullable File basePersistDirectory,
-        @Nullable SegmentWriteOutMediumFactory segmentWriteOutMediumFactory
+        @Nullable File basePersistDirectory
     )
     {
       Preconditions.checkArgument(
@@ -1059,8 +1047,6 @@ public class IndexTask extends AbstractTask
           !(this.forceExtendableShardSpecs && this.forceGuaranteedRollup),
           "Perfect rollup cannot be guaranteed with extendable shardSpecs"
       );
-
-      this.segmentWriteOutMediumFactory = segmentWriteOutMediumFactory;
     }
 
     public IndexTuningConfig withBasePersistDirectory(File dir)
@@ -1076,8 +1062,7 @@ public class IndexTask extends AbstractTask
           forceGuaranteedRollup,
           reportParseExceptions,
           publishTimeout,
-          dir,
-          segmentWriteOutMediumFactory
+          dir
       );
     }
 
@@ -1167,36 +1152,64 @@ public class IndexTask extends AbstractTask
       return new Period(Integer.MAX_VALUE); // intermediate persist doesn't make much sense for batch jobs
     }
 
-    @Nullable
-    @Override
-    @JsonProperty
-    public SegmentWriteOutMediumFactory getSegmentWriteOutMediumFactory()
-    {
-      return segmentWriteOutMediumFactory;
-    }
-
     @Override
     public boolean equals(Object o)
     {
       if (this == o) {
         return true;
       }
+
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      IndexTuningConfig that = (IndexTuningConfig) o;
-      return maxRowsInMemory == that.maxRowsInMemory &&
-             maxTotalRows == that.maxTotalRows &&
-             maxPendingPersists == that.maxPendingPersists &&
-             forceExtendableShardSpecs == that.forceExtendableShardSpecs &&
-             forceGuaranteedRollup == that.forceGuaranteedRollup &&
-             reportParseExceptions == that.reportParseExceptions &&
-             publishTimeout == that.publishTimeout &&
-             Objects.equals(targetPartitionSize, that.targetPartitionSize) &&
-             Objects.equals(numShards, that.numShards) &&
-             Objects.equals(indexSpec, that.indexSpec) &&
-             Objects.equals(basePersistDirectory, that.basePersistDirectory) &&
-             Objects.equals(segmentWriteOutMediumFactory, that.segmentWriteOutMediumFactory);
+
+      final IndexTuningConfig that = (IndexTuningConfig) o;
+
+      if (!Objects.equals(targetPartitionSize, that.targetPartitionSize)) {
+        return false;
+      }
+
+      if (maxRowsInMemory != that.maxRowsInMemory) {
+        return false;
+      }
+
+      if (maxTotalRows != that.maxTotalRows) {
+        return false;
+      }
+
+      if (!Objects.equals(numShards, that.numShards)) {
+        return false;
+      }
+
+      if (!Objects.equals(indexSpec, that.indexSpec)) {
+        return false;
+      }
+
+      if (!Objects.equals(basePersistDirectory, that.basePersistDirectory)) {
+        return false;
+      }
+
+      if (maxPendingPersists != that.maxPendingPersists) {
+        return false;
+      }
+
+      if (forceExtendableShardSpecs != that.forceExtendableShardSpecs) {
+        return false;
+      }
+
+      if (forceGuaranteedRollup != that.forceGuaranteedRollup) {
+        return false;
+      }
+
+      if (reportParseExceptions != that.reportParseExceptions) {
+        return false;
+      }
+
+      if (publishTimeout != that.publishTimeout) {
+        return false;
+      }
+
+      return true;
     }
 
     @Override
@@ -1213,8 +1226,7 @@ public class IndexTask extends AbstractTask
           forceExtendableShardSpecs,
           forceGuaranteedRollup,
           reportParseExceptions,
-          publishTimeout,
-          segmentWriteOutMediumFactory
+          publishTimeout
       );
     }
   }

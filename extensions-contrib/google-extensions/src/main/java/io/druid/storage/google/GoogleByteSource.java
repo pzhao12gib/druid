@@ -42,9 +42,4 @@ public class GoogleByteSource extends ByteSource
   {
     return storage.get(bucket, path);
   }
-
-  public InputStream openStream(long start) throws IOException
-  {
-    return storage.get(bucket, path, start);
-  }
 }

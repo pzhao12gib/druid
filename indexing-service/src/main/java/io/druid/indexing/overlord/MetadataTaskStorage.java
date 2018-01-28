@@ -28,7 +28,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
 import io.druid.indexing.common.TaskLock;
 import io.druid.indexing.common.TaskStatus;
 import io.druid.indexing.common.actions.TaskAction;
@@ -50,7 +50,6 @@ import org.joda.time.DateTime;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class MetadataTaskStorage implements TaskStorage
 {
@@ -213,25 +212,23 @@ public class MetadataTaskStorage implements TaskStorage
   }
 
   @Override
-  public List<TaskStatus> getRecentlyFinishedTaskStatuses(@Nullable Integer maxTaskStatuses)
+  public List<TaskStatus> getRecentlyFinishedTaskStatuses()
   {
-    return ImmutableList.copyOf(
-        handler
-            .getInactiveStatusesSince(
-                DateTimes.nowUtc().minus(config.getRecentlyFinishedThreshold()),
-                maxTaskStatuses
-            )
-            .stream()
-            .filter(TaskStatus::isComplete)
-            .collect(Collectors.toList())
-    );
-  }
+    final DateTime start = DateTimes.nowUtc().minus(config.getRecentlyFinishedThreshold());
 
-  @Nullable
-  @Override
-  public Pair<DateTime, String> getCreatedDateTimeAndDataSource(String taskId)
-  {
-    return handler.getCreatedDateAndDataSource(taskId);
+    return ImmutableList.copyOf(
+        Iterables.filter(
+            handler.getInactiveStatusesSince(start),
+            new Predicate<TaskStatus>()
+            {
+              @Override
+              public boolean apply(TaskStatus status)
+              {
+                return status.isComplete();
+              }
+            }
+        )
+    );
   }
 
   @Override

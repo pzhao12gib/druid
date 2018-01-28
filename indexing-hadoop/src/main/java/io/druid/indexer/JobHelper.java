@@ -64,6 +64,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
@@ -159,13 +160,18 @@ public class JobHelper
       if (jarFile.getName().endsWith(".jar")) {
         try {
           RetryUtils.retry(
-              () -> {
-                if (isSnapshot(jarFile)) {
-                  addSnapshotJarToClassPath(jarFile, intermediateClassPath, fs, job);
-                } else {
-                  addJarToClassPath(jarFile, distributedClassPath, intermediateClassPath, fs, job);
+              new Callable<Boolean>()
+              {
+                @Override
+                public Boolean call() throws Exception
+                {
+                  if (isSnapshot(jarFile)) {
+                    addSnapshotJarToClassPath(jarFile, intermediateClassPath, fs, job);
+                  } else {
+                    addJarToClassPath(jarFile, distributedClassPath, intermediateClassPath, fs, job);
+                  }
+                  return true;
                 }
-                return true;
               },
               shouldRetryPredicate(),
               NUM_RETRIES
@@ -601,45 +607,50 @@ public class JobHelper
   {
     try {
       return RetryUtils.retry(
-          () -> {
-            final boolean needRename;
+          new Callable<Boolean>()
+          {
+            @Override
+            public Boolean call() throws Exception
+            {
+              final boolean needRename;
 
-            if (outputFS.exists(finalIndexZipFilePath)) {
-              // NativeS3FileSystem.rename won't overwrite, so we might need to delete the old index first
-              final FileStatus zipFile = outputFS.getFileStatus(indexZipFilePath);
-              final FileStatus finalIndexZipFile = outputFS.getFileStatus(finalIndexZipFilePath);
+              if (outputFS.exists(finalIndexZipFilePath)) {
+                // NativeS3FileSystem.rename won't overwrite, so we might need to delete the old index first
+                final FileStatus zipFile = outputFS.getFileStatus(indexZipFilePath);
+                final FileStatus finalIndexZipFile = outputFS.getFileStatus(finalIndexZipFilePath);
 
-              if (zipFile.getModificationTime() >= finalIndexZipFile.getModificationTime()
-                  || zipFile.getLen() != finalIndexZipFile.getLen()) {
-                log.info(
-                    "File[%s / %s / %sB] existed, but wasn't the same as [%s / %s / %sB]",
-                    finalIndexZipFile.getPath(),
-                    DateTimes.utc(finalIndexZipFile.getModificationTime()),
-                    finalIndexZipFile.getLen(),
-                    zipFile.getPath(),
-                    DateTimes.utc(zipFile.getModificationTime()),
-                    zipFile.getLen()
-                );
-                outputFS.delete(finalIndexZipFilePath, false);
-                needRename = true;
+                if (zipFile.getModificationTime() >= finalIndexZipFile.getModificationTime()
+                    || zipFile.getLen() != finalIndexZipFile.getLen()) {
+                  log.info(
+                      "File[%s / %s / %sB] existed, but wasn't the same as [%s / %s / %sB]",
+                      finalIndexZipFile.getPath(),
+                      DateTimes.utc(finalIndexZipFile.getModificationTime()),
+                      finalIndexZipFile.getLen(),
+                      zipFile.getPath(),
+                      DateTimes.utc(zipFile.getModificationTime()),
+                      zipFile.getLen()
+                  );
+                  outputFS.delete(finalIndexZipFilePath, false);
+                  needRename = true;
+                } else {
+                  log.info(
+                      "File[%s / %s / %sB] existed and will be kept",
+                      finalIndexZipFile.getPath(),
+                      DateTimes.utc(finalIndexZipFile.getModificationTime()),
+                      finalIndexZipFile.getLen()
+                  );
+                  needRename = false;
+                }
               } else {
-                log.info(
-                    "File[%s / %s / %sB] existed and will be kept",
-                    finalIndexZipFile.getPath(),
-                    DateTimes.utc(finalIndexZipFile.getModificationTime()),
-                    finalIndexZipFile.getLen()
-                );
-                needRename = false;
+                needRename = true;
               }
-            } else {
-              needRename = true;
-            }
 
-            if (needRename) {
-              log.info("Attempting rename from [%s] to [%s]", indexZipFilePath, finalIndexZipFilePath);
-              return outputFS.rename(indexZipFilePath, finalIndexZipFilePath);
-            } else {
-              return true;
+              if (needRename) {
+                log.info("Attempting rename from [%s] to [%s]", indexZipFilePath, finalIndexZipFilePath);
+                return outputFS.rename(indexZipFilePath, finalIndexZipFilePath);
+              } else {
+                return true;
+              }
             }
           },
           FileUtils.IS_EXCEPTION,
@@ -810,7 +821,14 @@ public class JobHelper
   {
     try {
       return RetryUtils.retry(
-          () -> fs.delete(path, recursive),
+          new Callable<Boolean>()
+          {
+            @Override
+            public Boolean call() throws Exception
+            {
+              return fs.delete(path, recursive);
+            }
+          },
           shouldRetryPredicate(),
           NUM_RETRIES
       );

@@ -21,7 +21,6 @@ package io.druid.data.input.impl.prefetch;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.io.CountingOutputStream;
 import io.druid.data.input.Firehose;
@@ -31,7 +30,6 @@ import io.druid.data.input.impl.DimensionsSpec;
 import io.druid.data.input.impl.StringInputRowParser;
 import io.druid.data.input.impl.TimestampSpec;
 import io.druid.java.util.common.DateTimes;
-import io.druid.java.util.common.RetryUtils;
 import io.druid.java.util.common.StringUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -49,7 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -176,25 +173,6 @@ public class PrefetchableTextFilesFirehoseFactoryTest
   {
     final TestPrefetchableTextFilesFirehoseFactory factory =
         TestPrefetchableTextFilesFirehoseFactory.with(TEST_DIR, 0, 0);
-
-    final List<Row> rows = new ArrayList<>();
-    final File firehoseTmpDir = createFirehoseTmpDir("testWithoutCacheAndFetch");
-    try (Firehose firehose = factory.connect(parser, firehoseTmpDir)) {
-      while (firehose.hasMore()) {
-        rows.add(firehose.nextRow());
-      }
-    }
-
-    Assert.assertEquals(0, factory.getCacheManager().getTotalCachedBytes());
-    assertResult(rows);
-    assertNumRemainingCacheFiles(firehoseTmpDir, 0);
-  }
-
-  @Test
-  public void testWithoutCacheAndFetchAgainstConnectionReset() throws IOException
-  {
-    final TestPrefetchableTextFilesFirehoseFactory factory =
-        TestPrefetchableTextFilesFirehoseFactory.withConnectionResets(TEST_DIR, 0, 0, 2);
 
     final List<Row> rows = new ArrayList<>();
     final File firehoseTmpDir = createFirehoseTmpDir("testWithoutCacheAndFetch");
@@ -399,10 +377,10 @@ public class PrefetchableTextFilesFirehoseFactoryTest
 
   static class TestPrefetchableTextFilesFirehoseFactory extends PrefetchableTextFilesFirehoseFactory<File>
   {
+    private static final long defaultTimeout = 1000;
     private final long sleepMillis;
     private final File baseDir;
-    private int numOpenExceptions;
-    private int maxConnectionResets;
+    private int openExceptionCount;
 
     static TestPrefetchableTextFilesFirehoseFactory with(File baseDir, long cacheCapacity, long fetchCapacity)
     {
@@ -411,8 +389,8 @@ public class PrefetchableTextFilesFirehoseFactoryTest
           1024,
           cacheCapacity,
           fetchCapacity,
+          defaultTimeout,
           3,
-          0,
           0,
           0
       );
@@ -425,8 +403,8 @@ public class PrefetchableTextFilesFirehoseFactoryTest
           1024,
           2048,
           2048,
+          defaultTimeout,
           3,
-          0,
           0,
           0
       );
@@ -439,28 +417,9 @@ public class PrefetchableTextFilesFirehoseFactoryTest
           1024,
           2048,
           2048,
+          defaultTimeout,
           3,
           count,
-          0,
-          0
-      );
-    }
-
-    static TestPrefetchableTextFilesFirehoseFactory withConnectionResets(
-        File baseDir,
-        long cacheCapacity,
-        long fetchCapacity,
-        int numConnectionResets
-    )
-    {
-      return new TestPrefetchableTextFilesFirehoseFactory(
-          baseDir,
-          fetchCapacity / 2,
-          cacheCapacity,
-          fetchCapacity,
-          3,
-          0,
-          numConnectionResets,
           0
       );
     }
@@ -475,54 +434,18 @@ public class PrefetchableTextFilesFirehoseFactoryTest
           100,
           3,
           0,
-          0,
           ms
       );
     }
 
-    private static long computeTimeout(int maxRetry)
-    {
-      // See RetryUtils.nextRetrySleepMillis()
-      final double maxFuzzyMultiplier = 2.;
-      return (long) Math.min(
-          RetryUtils.MAX_SLEEP_MILLIS,
-          RetryUtils.BASE_SLEEP_MILLIS * Math.pow(2, maxRetry - 1) * maxFuzzyMultiplier
-      );
-    }
-
-    TestPrefetchableTextFilesFirehoseFactory(
-        File baseDir,
-        long prefetchTriggerThreshold,
-        long maxCacheCapacityBytes,
-        long maxFetchCapacityBytes,
-        int maxRetry,
-        int numOpenExceptions,
-        int numConnectionResets,
-        long sleepMillis
-    )
-    {
-      this(
-          baseDir,
-          prefetchTriggerThreshold,
-          maxCacheCapacityBytes,
-          maxFetchCapacityBytes,
-          computeTimeout(maxRetry),
-          maxRetry,
-          numOpenExceptions,
-          numConnectionResets,
-          sleepMillis
-      );
-    }
-
-    TestPrefetchableTextFilesFirehoseFactory(
+    public TestPrefetchableTextFilesFirehoseFactory(
         File baseDir,
         long prefetchTriggerThreshold,
         long maxCacheCapacityBytes,
         long maxFetchCapacityBytes,
         long timeout,
         int maxRetry,
-        int numOpenExceptions,
-        int maxConnectionResets,
+        int openExceptionCount,
         long sleepMillis
     )
     {
@@ -533,8 +456,7 @@ public class PrefetchableTextFilesFirehoseFactoryTest
           timeout,
           maxRetry
       );
-      this.numOpenExceptions = numOpenExceptions;
-      this.maxConnectionResets = maxConnectionResets;
+      this.openExceptionCount = openExceptionCount;
       this.sleepMillis = sleepMillis;
       this.baseDir = baseDir;
     }
@@ -552,8 +474,8 @@ public class PrefetchableTextFilesFirehoseFactoryTest
     @Override
     protected InputStream openObjectStream(File object) throws IOException
     {
-      if (numOpenExceptions > 0) {
-        numOpenExceptions--;
+      if (openExceptionCount > 0) {
+        openExceptionCount--;
         throw new IOException("Exception for retry test");
       }
       if (sleepMillis > 0) {
@@ -564,86 +486,13 @@ public class PrefetchableTextFilesFirehoseFactoryTest
           throw new RuntimeException(e);
         }
       }
-      return maxConnectionResets > 0 ?
-             new TestInputStream(FileUtils.openInputStream(object), maxConnectionResets) :
-             FileUtils.openInputStream(object);
+      return FileUtils.openInputStream(object);
     }
 
     @Override
     protected InputStream wrapObjectStream(File object, InputStream stream) throws IOException
     {
       return stream;
-    }
-
-    @Override
-    protected Predicate<Throwable> getRetryCondition()
-    {
-      return e -> e instanceof IOException;
-    }
-
-    @Override
-    protected InputStream openObjectStream(File object, long start) throws IOException
-    {
-      if (numOpenExceptions > 0) {
-        numOpenExceptions--;
-        throw new IOException("Exception for retry test");
-      }
-      if (sleepMillis > 0) {
-        try {
-          Thread.sleep(sleepMillis);
-        }
-        catch (InterruptedException e) {
-          throw new RuntimeException(e);
-        }
-      }
-
-      final InputStream in = FileUtils.openInputStream(object);
-      in.skip(start);
-
-      return maxConnectionResets > 0 ? new TestInputStream(in, maxConnectionResets) : in;
-    }
-
-    private int readCount;
-    private int numConnectionResets;
-
-    private class TestInputStream extends InputStream
-    {
-      private static final int NUM_READ_COUNTS_BEFORE_ERROR = 10;
-      private final InputStream delegate;
-      private final int maxConnectionResets;
-
-      TestInputStream(
-          InputStream delegate,
-          int maxConnectionResets
-      )
-      {
-        this.delegate = delegate;
-        this.maxConnectionResets = maxConnectionResets;
-      }
-
-      @Override
-      public int read() throws IOException
-      {
-        if (readCount++ % NUM_READ_COUNTS_BEFORE_ERROR == 0) {
-          if (numConnectionResets++ < maxConnectionResets) {
-            // Simulate connection reset
-            throw new SocketException("Test Connection reset");
-          }
-        }
-        return delegate.read();
-      }
-
-      @Override
-      public int read(byte b[], int off, int len) throws IOException
-      {
-        if (readCount++ % NUM_READ_COUNTS_BEFORE_ERROR == 0) {
-          if (numConnectionResets++ < maxConnectionResets) {
-            // Simulate connection reset
-            throw new SocketException("Test Connection reset");
-          }
-        }
-        return delegate.read(b, off, len);
-      }
     }
   }
 }

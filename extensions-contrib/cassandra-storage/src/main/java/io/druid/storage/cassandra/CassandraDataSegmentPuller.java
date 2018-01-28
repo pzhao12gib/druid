@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.Callable;
 
 /**
  * Cassandra Segment Puller
@@ -76,15 +77,20 @@ public class CassandraDataSegmentPuller extends CassandraStorage implements Data
     final FileUtils.FileCopyResult localResult;
     try {
       localResult = RetryUtils.retry(
-          () -> {
-            try (OutputStream os = new FileOutputStream(tmpFile)) {
-              ChunkedStorage
-                  .newReader(indexStorage, key, os)
-                  .withBatchSize(BATCH_SIZE)
-                  .withConcurrencyLevel(CONCURRENCY)
-                  .call();
+          new Callable<FileUtils.FileCopyResult>()
+          {
+            @Override
+            public FileUtils.FileCopyResult call() throws Exception
+            {
+              try (OutputStream os = new FileOutputStream(tmpFile)) {
+                ChunkedStorage
+                    .newReader(indexStorage, key, os)
+                    .withBatchSize(BATCH_SIZE)
+                    .withConcurrencyLevel(CONCURRENCY)
+                    .call();
+              }
+              return new FileUtils.FileCopyResult(tmpFile);
             }
-            return new FileUtils.FileCopyResult(tmpFile);
           },
           Predicates.<Throwable>alwaysTrue(),
           10

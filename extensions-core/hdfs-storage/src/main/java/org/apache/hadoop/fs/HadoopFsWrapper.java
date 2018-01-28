@@ -36,25 +36,23 @@ public class HadoopFsWrapper
   private HadoopFsWrapper() {}
 
   /**
-   * Same as FileSystem.rename(from, to, Options.Rename). It is different from FileSystem.rename(from, to) which moves
-   * "from" directory inside "to" directory if it already exists.
+   * Same as FileSystem.rename(from, to, Options.Rename.NONE) . That is,
+   * it returns "false" when "to" directory already exists. It is different from FileSystem.rename(from, to)
+   * which moves "from" directory inside "to" directory if it already exists.
    *
    * @param from
    * @param to
-   * @param replaceExisting if existing files should be overwritten
-   *
-   * @return true if operation succeeded, false if replaceExisting == false and destination already exists
-   *
-   * @throws IOException if trying to overwrite a non-empty directory
+   * @return
+   * @throws IOException
    */
-  public static boolean rename(FileSystem fs, Path from, Path to, boolean replaceExisting) throws IOException
+  public static boolean rename(FileSystem fs, Path from, Path to) throws IOException
   {
     try {
-      fs.rename(from, to, replaceExisting ? Options.Rename.OVERWRITE : Options.Rename.NONE);
+      fs.rename(from, to, Options.Rename.NONE);
       return true;
     }
-    catch (FileAlreadyExistsException ex) {
-      log.info(ex, "Destination exists while renaming [%s] to [%s]", from, to);
+    catch (IOException ex) {
+      log.warn(ex, "Failed to rename [%s] to [%s].", from, to);
       return false;
     }
   }

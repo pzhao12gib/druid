@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
@@ -34,16 +35,13 @@ import io.druid.indexing.common.actions.TaskAction;
 import io.druid.indexing.common.config.TaskStorageConfig;
 import io.druid.indexing.common.task.Task;
 import io.druid.java.util.common.DateTimes;
-import io.druid.java.util.common.Pair;
 import io.druid.java.util.common.logger.Logger;
 import io.druid.metadata.EntryExistsException;
 import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 /**
  * Implements an in-heap TaskStorage facility, with no persistence across restarts. This class is not
@@ -86,7 +84,7 @@ public class HeapMemoryTaskStorage implements TaskStorage
       }
 
       log.info("Inserting task %s with status: %s", task.getId(), status);
-      tasks.put(task.getId(), new TaskStuff(task, status, DateTimes.nowUtc(), task.getDataSource()));
+      tasks.put(task.getId(), new TaskStuff(task, status, DateTimes.nowUtc()));
     }
     finally {
       giant.unlock();
@@ -168,11 +166,13 @@ public class HeapMemoryTaskStorage implements TaskStorage
   }
 
   @Override
-  public List<TaskStatus> getRecentlyFinishedTaskStatuses(@Nullable Integer maxTaskStatuses)
+  public List<TaskStatus> getRecentlyFinishedTaskStatuses()
   {
     giant.lock();
 
     try {
+      final List<TaskStatus> returns = Lists.newArrayList();
+      final long recent = System.currentTimeMillis() - config.getRecentlyFinishedThreshold().getMillis();
       final Ordering<TaskStuff> createdDateDesc = new Ordering<TaskStuff>()
       {
         @Override
@@ -181,61 +181,12 @@ public class HeapMemoryTaskStorage implements TaskStorage
           return a.getCreatedDate().compareTo(b.getCreatedDate());
         }
       }.reverse();
-
-      return maxTaskStatuses == null ?
-             getRecentlyFinishedTaskStatusesSince(
-                 System.currentTimeMillis() - config.getRecentlyFinishedThreshold().getMillis(),
-                 createdDateDesc
-             ) :
-             getNRecentlyFinishedTaskStatuses(maxTaskStatuses, createdDateDesc);
-    }
-    finally {
-      giant.unlock();
-    }
-  }
-
-  private List<TaskStatus> getRecentlyFinishedTaskStatusesSince(long start, Ordering<TaskStuff> createdDateDesc)
-  {
-    giant.lock();
-
-    try {
-      return createdDateDesc
-          .sortedCopy(tasks.values())
-          .stream()
-          .filter(taskStuff -> taskStuff.getStatus().isComplete() && taskStuff.getCreatedDate().getMillis() > start)
-          .map(TaskStuff::getStatus)
-          .collect(Collectors.toList());
-    }
-    finally {
-      giant.unlock();
-    }
-  }
-
-  private List<TaskStatus> getNRecentlyFinishedTaskStatuses(int n, Ordering<TaskStuff> createdDateDesc)
-  {
-    giant.lock();
-
-    try {
-      return createdDateDesc.sortedCopy(tasks.values())
-                            .stream()
-                            .limit(n)
-                            .map(TaskStuff::getStatus)
-                            .collect(Collectors.toList());
-    }
-    finally {
-      giant.unlock();
-    }
-  }
-
-  @Nullable
-  @Override
-  public Pair<DateTime, String> getCreatedDateTimeAndDataSource(String taskId)
-  {
-    giant.lock();
-
-    try {
-      final TaskStuff taskStuff = tasks.get(taskId);
-      return taskStuff == null ? null : Pair.of(taskStuff.getCreatedDate(), taskStuff.getDataSource());
+      for (final TaskStuff taskStuff : createdDateDesc.sortedCopy(tasks.values())) {
+        if (taskStuff.getStatus().isComplete() && taskStuff.getCreatedDate().getMillis() > recent) {
+          returns.add(taskStuff.getStatus());
+        }
+      }
+      return returns;
     }
     finally {
       giant.unlock();
@@ -336,16 +287,16 @@ public class HeapMemoryTaskStorage implements TaskStorage
     final Task task;
     final TaskStatus status;
     final DateTime createdDate;
-    final String dataSource;
 
-    private TaskStuff(Task task, TaskStatus status, DateTime createdDate, String dataSource)
+    private TaskStuff(Task task, TaskStatus status, DateTime createdDate)
     {
+      Preconditions.checkNotNull(task);
+      Preconditions.checkNotNull(status);
       Preconditions.checkArgument(task.getId().equals(status.getId()));
 
-      this.task = Preconditions.checkNotNull(task, "task");
-      this.status = Preconditions.checkNotNull(status, "status");
+      this.task = task;
+      this.status = status;
       this.createdDate = Preconditions.checkNotNull(createdDate, "createdDate");
-      this.dataSource = Preconditions.checkNotNull(dataSource, "dataSource");
     }
 
     public Task getTask()
@@ -363,14 +314,9 @@ public class HeapMemoryTaskStorage implements TaskStorage
       return createdDate;
     }
 
-    public String getDataSource()
-    {
-      return dataSource;
-    }
-
     private TaskStuff withStatus(TaskStatus _status)
     {
-      return new TaskStuff(task, _status, createdDate, dataSource);
+      return new TaskStuff(task, _status, createdDate);
     }
   }
 }

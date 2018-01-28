@@ -19,7 +19,9 @@
 
 package io.druid.query.aggregation.variance;
 
+import com.google.common.collect.Lists;
 import io.druid.java.util.common.DateTimes;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.query.Druids;
 import io.druid.query.QueryPlus;
 import io.druid.query.QueryRunner;
@@ -101,7 +103,10 @@ public class VarianceTimeseriesQueryTest
         )
     );
 
-    Iterable<Result<TimeseriesResultValue>> results = runner.run(QueryPlus.wrap(query), new HashMap<>()).toList();
+    Iterable<Result<TimeseriesResultValue>> results = Sequences.toList(
+        runner.run(QueryPlus.wrap(query), new HashMap<String, Object>()),
+        Lists.<Result<TimeseriesResultValue>>newArrayList()
+    );
     assertExpectedResults(expectedResults, results);
   }
 

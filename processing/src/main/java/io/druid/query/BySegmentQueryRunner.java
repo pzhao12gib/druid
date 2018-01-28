@@ -19,6 +19,7 @@
 
 package io.druid.query;
 
+import com.google.common.collect.Lists;
 import io.druid.java.util.common.guava.Sequence;
 import io.druid.java.util.common.guava.Sequences;
 import org.joda.time.DateTime;
@@ -52,7 +53,7 @@ public class BySegmentQueryRunner<T> implements QueryRunner<T>
   {
     if (QueryContexts.isBySegment(queryPlus.getQuery())) {
       final Sequence<T> baseSequence = base.run(queryPlus, responseContext);
-      final List<T> results = baseSequence.toList();
+      final List<T> results = Sequences.toList(baseSequence, Lists.<T>newArrayList());
       return Sequences.simple(
           Collections.singletonList(
               (T) new Result<BySegmentResultValueClass<T>>(

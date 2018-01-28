@@ -19,21 +19,15 @@
 
 package io.druid.segment.data;
 
-import io.druid.java.util.common.IAE;
 import io.druid.query.monomorphicprocessing.RuntimeShapeInspector;
 
-/**
- * Reusable IndexedInts that represents a sequence of a solo value [X].
- */
+import java.io.IOException;
+
 public final class SingleIndexedInt implements IndexedInts
 {
-  private int value;
+  private final int value;
 
-  public SingleIndexedInt()
-  {
-  }
-
-  public void setValue(int value)
+  public SingleIndexedInt(int value)
   {
     this.value = value;
   }
@@ -48,9 +42,14 @@ public final class SingleIndexedInt implements IndexedInts
   public int get(int i)
   {
     if (i != 0) {
-      throw new IAE("%d != 0", i);
+      throw new IllegalArgumentException(i + " != 0");
     }
     return value;
+  }
+
+  @Override
+  public void close() throws IOException
+  {
   }
 
   @Override

@@ -80,12 +80,12 @@ import java.util.Map;
 @RunWith(Parameterized.class)
 public class IndexGeneratorJobTest
 {
-  private static final AggregatorFactory[] aggs1 = {
+  final private static AggregatorFactory[] aggs1 = {
       new LongSumAggregatorFactory("visited_num", "visited_num"),
       new HyperUniquesAggregatorFactory("unique_hosts", "host")
   };
 
-  private static final AggregatorFactory[] aggs2 = {
+  final private static AggregatorFactory[] aggs2 = {
       new CountAggregatorFactory("count")
   };
 

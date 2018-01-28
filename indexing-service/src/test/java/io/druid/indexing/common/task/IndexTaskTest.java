@@ -1006,7 +1006,7 @@ public class IndexTaskTest
       }
 
       @Override
-      public DataSegment push(File file, DataSegment segment, boolean replaceExisting) throws IOException
+      public DataSegment push(File file, DataSegment segment) throws IOException
       {
         segments.add(segment);
         return segment;
@@ -1147,7 +1147,6 @@ public class IndexTaskTest
         forceExtendableShardSpecs,
         forceGuaranteedRollup,
         reportParseException,
-        null,
         null
     );
   }

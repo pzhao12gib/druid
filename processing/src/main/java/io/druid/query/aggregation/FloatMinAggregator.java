@@ -37,13 +37,20 @@ public class FloatMinAggregator implements Aggregator
   public FloatMinAggregator(BaseFloatColumnValueSelector selector)
   {
     this.selector = selector;
-    this.min = Float.POSITIVE_INFINITY;
+
+    reset();
   }
 
   @Override
   public void aggregate()
   {
     min = Math.min(min, selector.getFloat());
+  }
+
+  @Override
+  public void reset()
+  {
+    min = Float.POSITIVE_INFINITY;
   }
 
   @Override

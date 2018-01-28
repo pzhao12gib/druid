@@ -28,7 +28,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
 import io.druid.guice.ManageLifecycle;
 import io.druid.java.util.common.ISE;
 import io.druid.java.util.common.Pair;
@@ -52,10 +52,10 @@ public class BatchServerInventoryView extends AbstractCuratorServerInventoryView
 {
   private static final EmittingLogger log = new EmittingLogger(BatchServerInventoryView.class);
 
-  private final ConcurrentMap<String, Set<DataSegment>> zNodes = new ConcurrentHashMap<>();
-  private final ConcurrentMap<SegmentCallback, Predicate<Pair<DruidServerMetadata, DataSegment>>> segmentPredicates =
+  final private ConcurrentMap<String, Set<DataSegment>> zNodes = new ConcurrentHashMap<>();
+  final private ConcurrentMap<SegmentCallback, Predicate<Pair<DruidServerMetadata, DataSegment>>> segmentPredicates =
       new ConcurrentHashMap<>();
-  private final Predicate<Pair<DruidServerMetadata, DataSegment>> defaultFilter;
+  final private Predicate<Pair<DruidServerMetadata, DataSegment>> defaultFilter;
 
   @Inject
   public BatchServerInventoryView(

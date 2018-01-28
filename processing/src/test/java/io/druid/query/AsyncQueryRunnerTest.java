@@ -40,7 +40,7 @@ import java.util.concurrent.TimeoutException;
 public class AsyncQueryRunnerTest
 {
 
-  private static final long TEST_TIMEOUT = 60000;
+  private final static long TEST_TIMEOUT = 60000;
   
   private final ExecutorService executor;
   private final Query query;
@@ -82,7 +82,7 @@ public class AsyncQueryRunnerTest
 
     Sequence lazy = asyncRunner.run(QueryPlus.wrap(query), Collections.EMPTY_MAP);
     latch.countDown();
-    Assert.assertEquals(Lists.newArrayList(1), lazy.toList());
+    Assert.assertEquals(Lists.newArrayList(1), Sequences.toList(lazy, Lists.newArrayList()));
   }
   
   @Test(timeout = TEST_TIMEOUT)
@@ -115,7 +115,7 @@ public class AsyncQueryRunnerTest
     );
 
     try {
-      lazy.toList();
+      Sequences.toList(lazy, Lists.newArrayList());
     }
     catch (RuntimeException ex) {
       Assert.assertTrue(ex.getCause() instanceof TimeoutException);

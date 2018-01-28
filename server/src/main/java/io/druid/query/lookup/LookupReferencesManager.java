@@ -28,8 +28,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import io.druid.java.util.emitter.EmittingLogger;
-import io.druid.java.util.http.client.response.FullResponseHolder;
+import com.metamx.emitter.EmittingLogger;
+import com.metamx.http.client.response.FullResponseHolder;
 import io.druid.client.coordinator.Coordinator;
 import io.druid.concurrent.LifecycleLock;
 import io.druid.discovery.DruidLeaderClient;
@@ -65,6 +65,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * This class provide a basic {@link LookupExtractorFactory} references manager.
@@ -471,30 +472,37 @@ public class LookupReferencesManager
 
   private void startLookups(final List<LookupBean> lookupBeanList)
   {
-    final ImmutableMap.Builder<String, LookupExtractorFactoryContainer> builder = ImmutableMap.builder();
-    final ExecutorService executorService = Execs.multiThreaded(
+    ImmutableMap.Builder<String, LookupExtractorFactoryContainer> builder = ImmutableMap.builder();
+    ExecutorService executorService = Execs.multiThreaded(
         lookupConfig.getNumLookupLoadingThreads(),
         "LookupReferencesManager-Startup-%s"
     );
-    final CompletionService<Map.Entry<String, LookupExtractorFactoryContainer>> completionService =
+    CompletionService<Map.Entry<String, LookupExtractorFactoryContainer>> completionService =
         new ExecutorCompletionService<>(executorService);
-    final List<LookupBean> remainingLookups = new ArrayList<>(lookupBeanList);
     try {
       LOG.info("Starting lookup loading process");
-      for (int i = 0; i < lookupConfig.getLookupStartRetries() && !remainingLookups.isEmpty(); i++) {
+      List<LookupBean> remainingLookups = lookupBeanList;
+      for (int i = 0; i < lookupConfig.getLookupStartRetries(); i++) {
         LOG.info("Round of attempts #%d, [%d] lookups", i + 1, remainingLookups.size());
-        final Map<String, LookupExtractorFactoryContainer> successfulLookups =
+        Map<String, LookupExtractorFactoryContainer> successfulLookups =
             startLookups(remainingLookups, completionService);
         builder.putAll(successfulLookups);
-        remainingLookups.removeIf(l -> successfulLookups.containsKey(l.getName()));
+        List<LookupBean> failedLookups = remainingLookups
+            .stream()
+            .filter(l -> !successfulLookups.containsKey(l.getName()))
+            .collect(Collectors.toList());
+        if (failedLookups.isEmpty()) {
+          break;
+        } else {
+          // next round
+          remainingLookups = failedLookups;
+        }
       }
-      if (!remainingLookups.isEmpty()) {
-        LOG.warn(
-            "Failed to start the following lookups after [%d] attempts: [%s]",
-            lookupConfig.getLookupStartRetries(),
-            remainingLookups
-        );
-      }
+      LOG.info(
+          "Failed to start the following lookups after [%d] attempts: [%s]",
+          lookupConfig.getLookupStartRetries(),
+          remainingLookups
+      );
       stateRef.set(new LookupUpdateState(builder.build(), ImmutableList.of(), ImmutableList.of()));
     }
     catch (InterruptedException | RuntimeException e) {

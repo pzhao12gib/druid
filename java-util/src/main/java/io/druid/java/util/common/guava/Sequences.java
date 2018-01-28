@@ -22,6 +22,7 @@ package io.druid.java.util.common.guava;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 
 import java.io.Closeable;
 import java.util.Arrays;
@@ -139,9 +140,14 @@ public class Sequences
   // This will materialize the entire sequence in memory. Use at your own risk.
   public static <T> Sequence<T> sort(final Sequence<T> sequence, final Comparator<T> comparator)
   {
-    List<T> seqList = sequence.toList();
+    List<T> seqList = Sequences.toList(sequence, Lists.<T>newArrayList());
     Collections.sort(seqList, comparator);
     return simple(seqList);
+  }
+
+  public static <T, ListType extends List<T>> ListType toList(Sequence<T> seq, ListType list)
+  {
+    return seq.accumulate(list, Accumulators.<ListType, T>list());
   }
 
   private static class EmptySequence implements Sequence<Object>

@@ -132,7 +132,7 @@ public class ChainedExecutionQueryRunnerTest
           @Override
           public void run()
           {
-            seq.toList();
+            Sequences.toList(seq, Lists.newArrayList());
           }
         }
     );
@@ -258,7 +258,7 @@ public class ChainedExecutionQueryRunnerTest
           @Override
           public void run()
           {
-            seq.toList();
+            Sequences.toList(seq, Lists.newArrayList());
           }
         }
     );

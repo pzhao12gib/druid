@@ -20,27 +20,28 @@
 package io.druid.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import io.druid.java.util.http.client.HttpClient;
-import io.druid.java.util.http.client.Request;
-import io.druid.java.util.http.client.response.HttpResponseHandler;
+import com.metamx.http.client.HttpClient;
+import com.metamx.http.client.Request;
+import com.metamx.http.client.response.HttpResponseHandler;
 import io.druid.discovery.DataNodeService;
 import io.druid.discovery.DiscoveryDruidNode;
 import io.druid.discovery.DruidNodeDiscovery;
 import io.druid.discovery.DruidNodeDiscoveryProvider;
+import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.Intervals;
 import io.druid.java.util.common.RE;
-import io.druid.segment.TestHelper;
 import io.druid.server.DruidNode;
 import io.druid.server.coordination.DruidServerMetadata;
 import io.druid.server.coordination.SegmentChangeRequestDrop;
-import io.druid.server.coordination.ChangeRequestHistory;
+import io.druid.server.coordination.SegmentChangeRequestHistory;
 import io.druid.server.coordination.SegmentChangeRequestLoad;
-import io.druid.server.coordination.ChangeRequestsSnapshot;
+import io.druid.server.coordination.SegmentChangeRequestsSnapshot;
 import io.druid.server.coordination.ServerType;
 import io.druid.timeline.DataSegment;
 import org.easymock.EasyMock;
@@ -62,7 +63,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 /**
  */
 public class HttpServerInventoryViewTest
@@ -70,7 +70,7 @@ public class HttpServerInventoryViewTest
   @Test(timeout = 10000)
   public void testSimple() throws Exception
   {
-    ObjectMapper jsonMapper = TestHelper.makeJsonMapper();
+    ObjectMapper jsonMapper = new DefaultObjectMapper();
 
     TestDruidNodeDiscovery druidNodeDiscovery = new TestDruidNodeDiscovery();
     DruidNodeDiscoveryProvider druidNodeDiscoveryProvider = EasyMock.createMock(DruidNodeDiscoveryProvider.class);
@@ -98,20 +98,15 @@ public class HttpServerInventoryViewTest
         null, null, null, null, 0, 0
     );
 
-    final DataSegment segment5 = new DataSegment(
-        "non-loading-datasource", Intervals.of("2014/2015"), "v1",
-        null, null, null, null, 0, 0
-    );
-
     TestHttpClient httpClient = new TestHttpClient(
         ImmutableList.of(
             Futures.immediateFuture(
                 new ByteArrayInputStream(
-                    jsonMapper.writerWithType(HttpServerInventoryView.SEGMENT_LIST_RESP_TYPE_REF).writeValueAsBytes(
-                        new ChangeRequestsSnapshot(
+                    jsonMapper.writeValueAsBytes(
+                        new SegmentChangeRequestsSnapshot(
                             false,
                             null,
-                            ChangeRequestHistory.Counter.ZERO,
+                            SegmentChangeRequestHistory.Counter.ZERO,
                             ImmutableList.of(
                                 new SegmentChangeRequestLoad(segment1)
                             )
@@ -121,11 +116,11 @@ public class HttpServerInventoryViewTest
             ),
             Futures.immediateFuture(
                 new ByteArrayInputStream(
-                    jsonMapper.writerWithType(HttpServerInventoryView.SEGMENT_LIST_RESP_TYPE_REF).writeValueAsBytes(
-                        new ChangeRequestsSnapshot(
+                    jsonMapper.writeValueAsBytes(
+                        new SegmentChangeRequestsSnapshot(
                             false,
                             null,
-                            ChangeRequestHistory.Counter.ZERO,
+                            SegmentChangeRequestHistory.Counter.ZERO,
                             ImmutableList.of(
                                 new SegmentChangeRequestDrop(segment1),
                                 new SegmentChangeRequestLoad(segment2),
@@ -137,11 +132,11 @@ public class HttpServerInventoryViewTest
             ),
             Futures.immediateFuture(
                 new ByteArrayInputStream(
-                    jsonMapper.writerWithType(HttpServerInventoryView.SEGMENT_LIST_RESP_TYPE_REF).writeValueAsBytes(
-                        new ChangeRequestsSnapshot(
+                    jsonMapper.writeValueAsBytes(
+                        new SegmentChangeRequestsSnapshot(
                             true,
                             "force reset counter",
-                            ChangeRequestHistory.Counter.ZERO,
+                            SegmentChangeRequestHistory.Counter.ZERO,
                             ImmutableList.of()
                         )
                     )
@@ -149,15 +144,14 @@ public class HttpServerInventoryViewTest
             ),
             Futures.immediateFuture(
                 new ByteArrayInputStream(
-                    jsonMapper.writerWithType(HttpServerInventoryView.SEGMENT_LIST_RESP_TYPE_REF).writeValueAsBytes(
-                        new ChangeRequestsSnapshot(
+                    jsonMapper.writeValueAsBytes(
+                        new SegmentChangeRequestsSnapshot(
                             false,
                             null,
-                            ChangeRequestHistory.Counter.ZERO,
+                            SegmentChangeRequestHistory.Counter.ZERO,
                             ImmutableList.of(
                                 new SegmentChangeRequestLoad(segment3),
-                                new SegmentChangeRequestLoad(segment4),
-                                new SegmentChangeRequestLoad(segment5)
+                                new SegmentChangeRequestLoad(segment4)
                             )
                         )
                     )
@@ -178,7 +172,7 @@ public class HttpServerInventoryViewTest
         jsonMapper,
         httpClient,
         druidNodeDiscoveryProvider,
-        (pair) -> !pair.rhs.getDataSource().equals("non-loading-datasource"),
+        Predicates.alwaysTrue(),
         new HttpServerInventoryViewConfig(null, null, null)
     );
 

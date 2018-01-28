@@ -38,8 +38,7 @@ public class DoubleLastAggregator implements Aggregator
     this.valueSelector = valueSelector;
     this.timeSelector = timeSelector;
 
-    lastTime = Long.MIN_VALUE;
-    lastValue = 0;
+    reset();
   }
 
   @Override
@@ -50,6 +49,13 @@ public class DoubleLastAggregator implements Aggregator
       lastTime = time;
       lastValue = valueSelector.getDouble();
     }
+  }
+
+  @Override
+  public void reset()
+  {
+    lastTime = Long.MIN_VALUE;
+    lastValue = 0;
   }
 
   @Override

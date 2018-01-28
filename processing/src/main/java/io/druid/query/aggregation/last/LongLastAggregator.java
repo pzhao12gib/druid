@@ -36,8 +36,7 @@ public class LongLastAggregator implements Aggregator
     this.valueSelector = valueSelector;
     this.timeSelector = timeSelector;
 
-    lastTime = Long.MIN_VALUE;
-    lastValue = 0;
+    reset();
   }
 
   @Override
@@ -48,6 +47,13 @@ public class LongLastAggregator implements Aggregator
       lastTime = time;
       lastValue = valueSelector.getLong();
     }
+  }
+
+  @Override
+  public void reset()
+  {
+    lastTime = Long.MIN_VALUE;
+    lastValue = 0;
   }
 
   @Override

@@ -186,7 +186,7 @@ public class QueryableIndexStorageAdapter implements StorageAdapter
 
   @Override
   public Sequence<Cursor> makeCursors(
-      @Nullable Filter filter,
+      Filter filter,
       Interval interval,
       VirtualColumns virtualColumns,
       Granularity gran,

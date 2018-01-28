@@ -41,10 +41,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
 import io.druid.java.util.common.concurrent.Execs;
 import io.druid.guice.annotations.Self;
-import io.druid.indexer.TaskLocation;
+import io.druid.indexing.common.TaskLocation;
 import io.druid.indexing.common.TaskStatus;
 import io.druid.indexing.common.config.TaskConfig;
 import io.druid.indexing.common.task.Task;
@@ -765,12 +765,6 @@ public class ForkingTaskRunner implements TaskRunner, TaskLogStreamer
       } else {
         return TaskLocation.create(processHolder.host, processHolder.port, processHolder.tlsPort);
       }
-    }
-
-    @Override
-    public String getTaskType()
-    {
-      return task.getType();
     }
   }
 

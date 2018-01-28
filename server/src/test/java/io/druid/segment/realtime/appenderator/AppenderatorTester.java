@@ -21,9 +21,9 @@ package io.druid.segment.realtime.appenderator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import io.druid.java.util.emitter.EmittingLogger;
-import io.druid.java.util.emitter.core.NoopEmitter;
-import io.druid.java.util.emitter.service.ServiceEmitter;
+import com.metamx.emitter.EmittingLogger;
+import com.metamx.emitter.core.NoopEmitter;
+import com.metamx.emitter.service.ServiceEmitter;
 import io.druid.client.cache.CacheConfig;
 import io.druid.client.cache.MapCache;
 import io.druid.data.input.impl.DimensionsSpec;
@@ -33,7 +33,6 @@ import io.druid.data.input.impl.TimestampSpec;
 import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.concurrent.Execs;
 import io.druid.java.util.common.granularity.Granularities;
-import io.druid.segment.writeout.OffHeapMemorySegmentWriteOutMediumFactory;
 import io.druid.query.DefaultQueryRunnerFactoryConglomerate;
 import io.druid.query.IntervalChunkingQueryRunnerDecorator;
 import io.druid.query.Query;
@@ -147,7 +146,6 @@ public class AppenderatorTester implements AutoCloseable
         0,
         null,
         null,
-        null,
         null
     );
 
@@ -156,7 +154,6 @@ public class AppenderatorTester implements AutoCloseable
 
     indexIO = new IndexIO(
         objectMapper,
-        OffHeapMemorySegmentWriteOutMediumFactory.instance(),
         new ColumnConfig()
         {
           @Override
@@ -166,7 +163,7 @@ public class AppenderatorTester implements AutoCloseable
           }
         }
     );
-    indexMerger = new IndexMergerV9(objectMapper, indexIO, OffHeapMemorySegmentWriteOutMediumFactory.instance());
+    indexMerger = new IndexMergerV9(objectMapper, indexIO);
 
     emitter = new ServiceEmitter(
         "test",
@@ -193,7 +190,7 @@ public class AppenderatorTester implements AutoCloseable
       }
 
       @Override
-      public DataSegment push(File file, DataSegment segment, boolean replaceExisting) throws IOException
+      public DataSegment push(File file, DataSegment segment) throws IOException
       {
         if (enablePushFailure && mustFail) {
           mustFail = false;

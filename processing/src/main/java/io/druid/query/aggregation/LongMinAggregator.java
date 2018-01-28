@@ -41,13 +41,20 @@ public class LongMinAggregator implements Aggregator
   public LongMinAggregator(BaseLongColumnValueSelector selector)
   {
     this.selector = selector;
-    this.min = Long.MAX_VALUE;
+
+    reset();
   }
 
   @Override
   public void aggregate()
   {
     min = Math.min(min, selector.getLong());
+  }
+
+  @Override
+  public void reset()
+  {
+    min = Long.MAX_VALUE;
   }
 
   @Override

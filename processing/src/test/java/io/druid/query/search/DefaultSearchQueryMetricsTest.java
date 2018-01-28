@@ -20,7 +20,7 @@
 package io.druid.query.search;
 
 import com.google.common.collect.ImmutableSet;
-import io.druid.java.util.emitter.service.ServiceEmitter;
+import com.metamx.emitter.service.ServiceEmitter;
 import io.druid.query.CachingEmitter;
 import io.druid.query.DefaultQueryMetricsTest;
 import io.druid.query.DruidMetrics;

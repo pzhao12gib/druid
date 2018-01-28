@@ -19,8 +19,6 @@
 
 package io.druid.testing;
 
-import java.util.Map;
-
 /**
  */
 public interface IntegrationTestingConfig
@@ -33,8 +31,6 @@ public interface IntegrationTestingConfig
 
   String getBrokerUrl();
 
-  String getHistoricalUrl();
-
   String getMiddleManagerHost();
 
   String getZookeeperHosts();
@@ -46,8 +42,4 @@ public interface IntegrationTestingConfig
   String getUsername();
 
   String getPassword();
-
-  Map<String, String> getProperties();
-
-  boolean manageKafkaTopic();
 }

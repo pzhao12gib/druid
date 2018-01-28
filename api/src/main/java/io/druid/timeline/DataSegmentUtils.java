@@ -30,6 +30,9 @@ import org.joda.time.Interval;
 
 import java.util.Objects;
 
+/**
+ * identifier to DataSegment.
+ */
 @PublicApi
 public class DataSegmentUtils
 {

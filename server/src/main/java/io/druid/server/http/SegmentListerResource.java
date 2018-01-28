@@ -25,15 +25,14 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
-import io.druid.java.util.emitter.EmittingLogger;
+import com.metamx.emitter.EmittingLogger;
 import com.sun.jersey.spi.container.ResourceFilters;
-import io.druid.client.HttpServerInventoryView;
 import io.druid.guice.annotations.Json;
 import io.druid.guice.annotations.Smile;
 import io.druid.server.coordination.BatchDataSegmentAnnouncer;
-import io.druid.server.coordination.ChangeRequestHistory;
-import io.druid.server.coordination.ChangeRequestsSnapshot;
 import io.druid.server.coordination.DataSegmentChangeRequest;
+import io.druid.server.coordination.SegmentChangeRequestHistory;
+import io.druid.server.coordination.SegmentChangeRequestsSnapshot;
 import io.druid.server.coordination.SegmentLoadDropHandler;
 import io.druid.server.coordinator.HttpLoadQueuePeon;
 import io.druid.server.http.security.StateResourceFilter;
@@ -131,8 +130,8 @@ public class SegmentListerResource
     }
 
     final ResponseContext context = createContext(req.getHeader("Accept"));
-    final ListenableFuture<ChangeRequestsSnapshot<DataSegmentChangeRequest>> future = announcer.getSegmentChangesSince(
-        new ChangeRequestHistory.Counter(
+    final ListenableFuture<SegmentChangeRequestsSnapshot> future = announcer.getSegmentChangesSince(
+        new SegmentChangeRequestHistory.Counter(
             counter,
             hash
         )
@@ -171,16 +170,15 @@ public class SegmentListerResource
 
     Futures.addCallback(
         future,
-        new FutureCallback<ChangeRequestsSnapshot<DataSegmentChangeRequest>>()
+        new FutureCallback<SegmentChangeRequestsSnapshot>()
         {
           @Override
-          public void onSuccess(ChangeRequestsSnapshot<DataSegmentChangeRequest> result)
+          public void onSuccess(SegmentChangeRequestsSnapshot result)
           {
             try {
               HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
               response.setStatus(HttpServletResponse.SC_OK);
-              context.inputMapper.writerWithType(HttpServerInventoryView.SEGMENT_LIST_RESP_TYPE_REF)
-                                 .writeValue(asyncContext.getResponse().getOutputStream(), result);
+              context.inputMapper.writeValue(asyncContext.getResponse().getOutputStream(), result);
               asyncContext.complete();
             }
             catch (Exception ex) {

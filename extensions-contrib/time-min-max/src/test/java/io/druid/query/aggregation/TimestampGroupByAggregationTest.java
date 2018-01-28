@@ -26,6 +26,7 @@ import io.druid.data.input.Row;
 import io.druid.java.util.common.DateTimes;
 import io.druid.java.util.common.granularity.Granularities;
 import io.druid.java.util.common.guava.Sequence;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.query.groupby.GroupByQueryConfig;
 import io.druid.query.groupby.GroupByQueryRunnerTest;
 import io.druid.segment.ColumnSelectorFactory;
@@ -177,7 +178,7 @@ public class TimestampGroupByAggregationTest
         groupBy
     );
 
-    List<Row> results = seq.toList();
+    List<Row> results = Sequences.toList(seq, Lists.<Row>newArrayList());
     Assert.assertEquals(36, results.size());
     Assert.assertEquals(expected, ((MapBasedRow) results.get(0)).getEvent().get(groupByField));
   }

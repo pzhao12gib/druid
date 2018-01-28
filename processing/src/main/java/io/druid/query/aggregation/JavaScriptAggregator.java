@@ -56,6 +56,12 @@ public class JavaScriptAggregator implements Aggregator
   }
 
   @Override
+  public void reset()
+  {
+    current = script.reset();
+  }
+
+  @Override
   public Object get()
   {
     return current;

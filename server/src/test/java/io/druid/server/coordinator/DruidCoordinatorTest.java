@@ -114,7 +114,7 @@ public class DruidCoordinatorTest extends CuratorTestBase
             EasyMock.anyObject(Class.class),
             EasyMock.anyObject()
         )
-    ).andReturn(new AtomicReference(CoordinatorDynamicConfig.builder().build())).anyTimes();
+    ).andReturn(new AtomicReference(new CoordinatorDynamicConfig.Builder().build())).anyTimes();
     EasyMock.replay(configManager);
     setupServerAndCurator();
     curator.start();

@@ -37,13 +37,20 @@ public class DoubleMinAggregator implements Aggregator
   public DoubleMinAggregator(BaseDoubleColumnValueSelector selector)
   {
     this.selector = selector;
-    this.min = Double.POSITIVE_INFINITY;
+
+    reset();
   }
 
   @Override
   public void aggregate()
   {
     min = Math.min(min, selector.getDouble());
+  }
+
+  @Override
+  public void reset()
+  {
+    min = Double.POSITIVE_INFINITY;
   }
 
   @Override

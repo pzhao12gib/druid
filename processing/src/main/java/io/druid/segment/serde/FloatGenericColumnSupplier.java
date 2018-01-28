@@ -21,16 +21,16 @@ package io.druid.segment.serde;
 
 import com.google.common.base.Supplier;
 import io.druid.segment.column.GenericColumn;
-import io.druid.segment.column.FloatsColumn;
-import io.druid.segment.data.CompressedColumnarFloatsSupplier;
+import io.druid.segment.column.IndexedFloatsGenericColumn;
+import io.druid.segment.data.CompressedFloatsIndexedSupplier;
 
 /**
 */
 public class FloatGenericColumnSupplier implements Supplier<GenericColumn>
 {
-  private final CompressedColumnarFloatsSupplier column;
+  private final CompressedFloatsIndexedSupplier column;
 
-  public FloatGenericColumnSupplier(CompressedColumnarFloatsSupplier column)
+  public FloatGenericColumnSupplier(CompressedFloatsIndexedSupplier column)
   {
     this.column = column;
   }
@@ -38,6 +38,6 @@ public class FloatGenericColumnSupplier implements Supplier<GenericColumn>
   @Override
   public GenericColumn get()
   {
-    return new FloatsColumn(column.get());
+    return new IndexedFloatsGenericColumn(column.get());
   }
 }

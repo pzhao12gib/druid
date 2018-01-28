@@ -27,15 +27,13 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.druid.java.util.emitter.EmittingLogger;
-import io.druid.java.util.common.DateTimes;
+import com.metamx.emitter.EmittingLogger;
 import io.druid.java.util.common.Pair;
 import io.druid.java.util.common.StringUtils;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.FoldController;
 import org.skife.jdbi.v2.Folder3;
 import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.Query;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.CallbackFailedException;
 import org.skife.jdbi.v2.exceptions.StatementException;
@@ -51,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public abstract class SQLMetadataStorageActionHandler<EntryType, StatusType, LogType, LockType>
+public class SQLMetadataStorageActionHandler<EntryType, StatusType, LogType, LockType>
     implements MetadataStorageActionHandler<EntryType, StatusType, LogType, LockType>
 {
   private static final EmittingLogger log = new EmittingLogger(SQLMetadataStorageActionHandler.class);
@@ -88,26 +86,6 @@ public abstract class SQLMetadataStorageActionHandler<EntryType, StatusType, Log
     this.entryTable = entryTable;
     this.logTable = logTable;
     this.lockTable = lockTable;
-  }
-
-  protected SQLMetadataConnector getConnector()
-  {
-    return connector;
-  }
-
-  protected ObjectMapper getJsonMapper()
-  {
-    return jsonMapper;
-  }
-
-  protected TypeReference getStatusType()
-  {
-    return statusType;
-  }
-
-  protected String getEntryTable()
-  {
-    return entryTable;
   }
 
   @Override
@@ -290,58 +268,44 @@ public abstract class SQLMetadataStorageActionHandler<EntryType, StatusType, Log
   }
 
   @Override
-  public List<StatusType> getInactiveStatusesSince(DateTime timestamp, @Nullable Integer maxNumStatuses)
-  {
-    return getConnector().retryWithHandle(
-        handle -> {
-          final Query<Map<String, Object>> query = createInactiveStatusesSinceQuery(handle, timestamp, maxNumStatuses);
-
-          return query
-              .map(
-                  (ResultSetMapper<StatusType>) (index, r, ctx) -> {
-                    try {
-                      return getJsonMapper().readValue(
-                          r.getBytes("status_payload"),
-                          getStatusType()
-                      );
-                    }
-                    catch (IOException e) {
-                      log.makeAlert(e, "Failed to parse status payload")
-                         .addData("entry", r.getString("id"))
-                         .emit();
-                      throw new SQLException(e);
-                    }
-                  }
-              ).list();
-        }
-    );
-  }
-
-  protected abstract Query<Map<String, Object>> createInactiveStatusesSinceQuery(
-      Handle handle,
-      DateTime timestamp,
-      @Nullable Integer maxNumStatuses
-  );
-
-  @Override
-  @Nullable
-  public Pair<DateTime, String> getCreatedDateAndDataSource(String entryId)
+  public List<StatusType> getInactiveStatusesSince(final DateTime timestamp)
   {
     return connector.retryWithHandle(
-        handle -> handle
-        .createQuery(
-            StringUtils.format(
-                "SELECT created_date, datasource FROM %s WHERE id = :entryId",
-                entryTable
-            )
-        )
-        .bind("entryId", entryId)
-        .map(
-            (index, resultSet, ctx) -> Pair.of(
-                DateTimes.of(resultSet.getString("created_date")), resultSet.getString("datasource")
-            )
-        )
-        .first()
+        new HandleCallback<List<StatusType>>()
+        {
+          @Override
+          public List<StatusType> withHandle(Handle handle) throws Exception
+          {
+            return handle
+                .createQuery(
+                    StringUtils.format(
+                        "SELECT id, status_payload FROM %s WHERE active = FALSE AND created_date >= :start ORDER BY created_date DESC",
+                        entryTable
+                    )
+                ).bind("start", timestamp.toString())
+                .map(
+                    new ResultSetMapper<StatusType>()
+                    {
+                      @Override
+                      public StatusType map(int index, ResultSet r, StatementContext ctx) throws SQLException
+                      {
+                        try {
+                          return jsonMapper.readValue(
+                              r.getBytes("status_payload"),
+                              statusType
+                          );
+                        }
+                        catch (IOException e) {
+                          log.makeAlert(e, "Failed to parse status payload")
+                             .addData("entry", r.getString("id"))
+                             .emit();
+                          throw new SQLException(e);
+                        }
+                      }
+                    }
+                ).list();
+          }
+        }
     );
   }
 

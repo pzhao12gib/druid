@@ -42,7 +42,6 @@ final class ForwardingFilteredDimensionSelector implements DimensionSelector, Id
   private final IdLookup baseIdLookup;
   private final Int2IntOpenHashMap forwardMapping;
   private final int[] reverseMapping;
-  private final ArrayBasedIndexedInts row = new ArrayBasedIndexedInts();
 
   /**
    * @param selector must return true from {@link DimensionSelector#nameLookupPossibleInAdvance()}
@@ -71,17 +70,15 @@ final class ForwardingFilteredDimensionSelector implements DimensionSelector, Id
   {
     IndexedInts baseRow = selector.getRow();
     int baseRowSize = baseRow.size();
-    row.ensureSize(baseRowSize);
+    int[] result = new int[baseRowSize];
     int resultSize = 0;
     for (int i = 0; i < baseRowSize; i++) {
       int forwardedValue = forwardMapping.get(baseRow.get(i));
       if (forwardedValue >= 0) {
-        row.setValue(resultSize, forwardedValue);
-        resultSize++;
+        result[resultSize++] = forwardedValue;
       }
     }
-    row.setSize(resultSize);
-    return row;
+    return ArrayBasedIndexedInts.of(result, resultSize);
   }
 
   @Override

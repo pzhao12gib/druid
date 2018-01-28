@@ -38,6 +38,11 @@ public final class NoopAggregator implements Aggregator
   }
 
   @Override
+  public void reset()
+  {
+  }
+
+  @Override
   public Object get()
   {
     return null;

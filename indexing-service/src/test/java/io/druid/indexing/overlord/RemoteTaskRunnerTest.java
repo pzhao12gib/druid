@@ -28,9 +28,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.druid.java.util.emitter.EmittingLogger;
-import io.druid.java.util.emitter.service.ServiceEmitter;
-import io.druid.indexer.TaskState;
+import com.metamx.emitter.EmittingLogger;
+import com.metamx.emitter.service.ServiceEmitter;
 import io.druid.indexing.common.IndexingServiceCondition;
 import io.druid.indexing.common.TaskStatus;
 import io.druid.indexing.common.TestRealtimeTask;
@@ -106,7 +105,7 @@ public class RemoteTaskRunnerTest
     Assert.assertTrue(workerCompletedTask(result));
 
     Assert.assertEquals(task.getId(), result.get().getId());
-    Assert.assertEquals(TaskState.SUCCESS, result.get().getStatusCode());
+    Assert.assertEquals(TaskStatus.Status.SUCCESS, result.get().getStatusCode());
   }
 
   @Test
@@ -132,7 +131,7 @@ public class RemoteTaskRunnerTest
     Assert.assertTrue(workerCompletedTask(result));
 
     Assert.assertEquals(task.getId(), result.get().getId());
-    Assert.assertEquals(TaskState.SUCCESS, result.get().getStatusCode());
+    Assert.assertEquals(TaskStatus.Status.SUCCESS, result.get().getStatusCode());
   }
 
   @Test
@@ -153,7 +152,7 @@ public class RemoteTaskRunnerTest
     Assert.assertTrue(workerCompletedTask(result));
 
     Assert.assertEquals(task.getId(), result.get().getId());
-    Assert.assertEquals(TaskState.SUCCESS, result.get().getStatusCode());
+    Assert.assertEquals(TaskStatus.Status.SUCCESS, result.get().getStatusCode());
   }
 
   @Test
@@ -315,7 +314,7 @@ public class RemoteTaskRunnerTest
 
     TaskStatus status = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-    Assert.assertEquals(status.getStatusCode(), TaskState.FAILED);
+    Assert.assertEquals(status.getStatusCode(), TaskStatus.Status.FAILED);
   }
 
   @Test
@@ -368,7 +367,7 @@ public class RemoteTaskRunnerTest
 
     TaskStatus status = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-    Assert.assertEquals(TaskState.SUCCESS, status.getStatusCode());
+    Assert.assertEquals(TaskStatus.Status.SUCCESS, status.getStatusCode());
   }
 
   @Test
@@ -386,7 +385,7 @@ public class RemoteTaskRunnerTest
 
     TaskStatus status = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-    Assert.assertEquals(TaskState.FAILED, status.getStatusCode());
+    Assert.assertEquals(TaskStatus.Status.FAILED, status.getStatusCode());
     RemoteTaskRunnerConfig config = remoteTaskRunner.getRemoteTaskRunnerConfig();
     Assert.assertTrue(
         TestUtils.conditionValid(
@@ -422,7 +421,7 @@ public class RemoteTaskRunnerTest
     mockWorkerCompleteSuccessfulTask(task);
     Assert.assertTrue(workerCompletedTask(result));
     Assert.assertEquals(task.getId(), result.get().getId());
-    Assert.assertEquals(TaskState.SUCCESS, result.get().getStatusCode());
+    Assert.assertEquals(TaskStatus.Status.SUCCESS, result.get().getStatusCode());
 
     // Confirm RTR thinks the worker is disabled.
     Assert.assertEquals("", Iterables.getOnlyElement(remoteTaskRunner.getWorkers()).getWorker().getVersion());
@@ -596,18 +595,18 @@ public class RemoteTaskRunnerTest
 
     mockWorkerCompleteSuccessfulTask(task);
     TaskStatus status = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    Assert.assertEquals(status.getStatusCode(), TaskState.SUCCESS);
-    Assert.assertEquals(TaskState.SUCCESS, status.getStatusCode());
+    Assert.assertEquals(status.getStatusCode(), TaskStatus.Status.SUCCESS);
+    Assert.assertEquals(TaskStatus.Status.SUCCESS, status.getStatusCode());
   }
 
   @Test
   public void testSortByInsertionTime() throws Exception
   {
-    RemoteTaskRunnerWorkItem item1 = new RemoteTaskRunnerWorkItem("b", "t", null, null)
+    RemoteTaskRunnerWorkItem item1 = new RemoteTaskRunnerWorkItem("b", null, null)
         .withQueueInsertionTime(DateTimes.of("2015-01-01T00:00:03Z"));
-    RemoteTaskRunnerWorkItem item2 = new RemoteTaskRunnerWorkItem("a", "t", null, null)
+    RemoteTaskRunnerWorkItem item2 = new RemoteTaskRunnerWorkItem("a", null, null)
         .withQueueInsertionTime(DateTimes.of("2015-01-01T00:00:02Z"));
-    RemoteTaskRunnerWorkItem item3 = new RemoteTaskRunnerWorkItem("c", "t", null, null)
+    RemoteTaskRunnerWorkItem item3 = new RemoteTaskRunnerWorkItem("c", null, null)
         .withQueueInsertionTime(DateTimes.of("2015-01-01T00:00:01Z"));
     ArrayList<RemoteTaskRunnerWorkItem> workItems = Lists.newArrayList(item1, item2, item3);
     RemoteTaskRunner.sortByInsertionTime(workItems);

@@ -29,13 +29,14 @@ import com.google.common.io.Files;
 import io.druid.benchmark.datagen.BenchmarkDataGenerator;
 import io.druid.benchmark.datagen.BenchmarkSchemaInfo;
 import io.druid.benchmark.datagen.BenchmarkSchemas;
+import io.druid.java.util.common.concurrent.Execs;
 import io.druid.data.input.InputRow;
 import io.druid.data.input.Row;
 import io.druid.hll.HyperLogLogHash;
 import io.druid.jackson.DefaultObjectMapper;
-import io.druid.java.util.common.concurrent.Execs;
 import io.druid.java.util.common.granularity.Granularities;
 import io.druid.java.util.common.guava.Sequence;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.java.util.common.logger.Logger;
 import io.druid.query.Druids;
 import io.druid.query.Druids.SearchQueryBuilder;
@@ -58,13 +59,13 @@ import io.druid.query.filter.BoundDimFilter;
 import io.druid.query.filter.DimFilter;
 import io.druid.query.filter.InDimFilter;
 import io.druid.query.filter.SelectorDimFilter;
-import io.druid.query.search.SearchHit;
-import io.druid.query.search.SearchQuery;
-import io.druid.query.search.SearchQueryConfig;
 import io.druid.query.search.SearchQueryQueryToolChest;
 import io.druid.query.search.SearchQueryRunnerFactory;
 import io.druid.query.search.SearchResultValue;
 import io.druid.query.search.SearchStrategySelector;
+import io.druid.query.search.SearchHit;
+import io.druid.query.search.SearchQuery;
+import io.druid.query.search.SearchQueryConfig;
 import io.druid.query.spec.MultipleIntervalSegmentSpec;
 import io.druid.query.spec.QuerySegmentSpec;
 import io.druid.segment.IncrementalIndexSegment;
@@ -76,7 +77,6 @@ import io.druid.segment.QueryableIndexSegment;
 import io.druid.segment.column.ColumnConfig;
 import io.druid.segment.incremental.IncrementalIndex;
 import io.druid.segment.serde.ComplexMetrics;
-import io.druid.segment.writeout.OffHeapMemorySegmentWriteOutMediumFactory;
 import org.apache.commons.io.FileUtils;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -140,7 +140,6 @@ public class SearchBenchmark
     JSON_MAPPER = new DefaultObjectMapper();
     INDEX_IO = new IndexIO(
         JSON_MAPPER,
-        OffHeapMemorySegmentWriteOutMediumFactory.instance(),
         new ColumnConfig()
         {
           @Override
@@ -150,7 +149,7 @@ public class SearchBenchmark
           }
         }
     );
-    INDEX_MERGER_V9 = new IndexMergerV9(JSON_MAPPER, INDEX_IO, OffHeapMemorySegmentWriteOutMediumFactory.instance());
+    INDEX_MERGER_V9 = new IndexMergerV9(JSON_MAPPER, INDEX_IO);
   }
 
   private static final Map<String, Map<String, Druids.SearchQueryBuilder>> SCHEMA_QUERY_MAP = new LinkedHashMap<>();
@@ -361,8 +360,7 @@ public class SearchBenchmark
       File indexFile = INDEX_MERGER_V9.persist(
           incIndexes.get(i),
           tmpDir,
-          new IndexSpec(),
-          null
+          new IndexSpec()
       );
 
       QueryableIndex qIndex = INDEX_IO.loadIndex(indexFile);
@@ -404,7 +402,7 @@ public class SearchBenchmark
     );
 
     Sequence<T> queryResult = theRunner.run(QueryPlus.wrap(query), Maps.<String, Object>newHashMap());
-    return queryResult.toList();
+    return Sequences.toList(queryResult, Lists.<T>newArrayList());
   }
 
   @Benchmark
@@ -472,7 +470,10 @@ public class SearchBenchmark
         QueryPlus.wrap(query),
         Maps.<String, Object>newHashMap()
     );
-    List<Result<SearchResultValue>> results = queryResult.toList();
+    List<Result<SearchResultValue>> results = Sequences.toList(
+        queryResult,
+        Lists.<Result<SearchResultValue>>newArrayList()
+    );
 
     for (Result<SearchResultValue> result : results) {
       List<SearchHit> hits = result.getValue().getValue();

@@ -35,6 +35,12 @@ public abstract class VarianceAggregator implements Aggregator
   }
 
   @Override
+  public void reset()
+  {
+    holder.reset();
+  }
+
+  @Override
   public Object get()
   {
     return holder;

@@ -39,7 +39,7 @@ public class OrDimFilter implements DimFilter
 {
   private static final Joiner OR_JOINER = Joiner.on(" || ");
 
-  private final List<DimFilter> fields;
+  final private List<DimFilter> fields;
 
   @JsonCreator
   public OrDimFilter(

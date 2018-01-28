@@ -50,6 +50,7 @@ import io.druid.segment.Metadata;
 import io.druid.segment.Segment;
 import org.joda.time.Interval;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -212,7 +213,12 @@ public class SegmentMetadataQueryRunnerFactory implements QueryRunnerFactory<Seg
                           @Override
                           public Sequence<SegmentAnalysis> call() throws Exception
                           {
-                            return Sequences.simple(input.run(threadSafeQueryPlus, responseContext).toList());
+                            return Sequences.simple(
+                                Sequences.toList(
+                                    input.run(threadSafeQueryPlus, responseContext),
+                                    new ArrayList<>()
+                                )
+                            );
                           }
                         }
                     );

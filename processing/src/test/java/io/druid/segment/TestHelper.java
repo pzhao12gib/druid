@@ -27,14 +27,13 @@ import io.druid.data.input.Row;
 import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.StringUtils;
 import io.druid.java.util.common.guava.Sequence;
+import io.druid.java.util.common.guava.Sequences;
 import io.druid.math.expr.ExprMacroTable;
 import io.druid.query.Result;
 import io.druid.query.expression.TestExprMacroTable;
 import io.druid.query.timeseries.TimeseriesResultValue;
 import io.druid.query.topn.TopNResultValue;
 import io.druid.segment.column.ColumnConfig;
-import io.druid.segment.writeout.SegmentWriteOutMediumFactory;
-import io.druid.timeline.DataSegment;
 import org.junit.Assert;
 
 import java.util.Iterator;
@@ -47,18 +46,13 @@ import java.util.stream.IntStream;
  */
 public class TestHelper
 {
-  private static final ObjectMapper JSON_MAPPER = makeJsonMapper();
+  private static final IndexMergerV9 INDEX_MERGER_V9;
+  private static final IndexIO INDEX_IO;
 
-  public static IndexMergerV9 getTestIndexMergerV9(SegmentWriteOutMediumFactory segmentWriteOutMediumFactory)
-  {
-    return new IndexMergerV9(JSON_MAPPER, getTestIndexIO(segmentWriteOutMediumFactory), segmentWriteOutMediumFactory);
-  }
-
-  public static IndexIO getTestIndexIO(SegmentWriteOutMediumFactory segmentWriteOutMediumFactory)
-  {
-    return new IndexIO(
-        JSON_MAPPER,
-        segmentWriteOutMediumFactory,
+  static {
+    final ObjectMapper jsonMapper = getJsonMapper();
+    INDEX_IO = new IndexIO(
+        jsonMapper,
         new ColumnConfig()
         {
           @Override
@@ -68,16 +62,26 @@ public class TestHelper
           }
         }
     );
+    INDEX_MERGER_V9 = new IndexMergerV9(jsonMapper, INDEX_IO);
   }
 
-  public static ObjectMapper makeJsonMapper()
+  public static IndexMergerV9 getTestIndexMergerV9()
+  {
+    return INDEX_MERGER_V9;
+  }
+
+  public static IndexIO getTestIndexIO()
+  {
+    return INDEX_IO;
+  }
+
+  public static ObjectMapper getJsonMapper()
   {
     final ObjectMapper mapper = new DefaultObjectMapper();
     mapper.setInjectableValues(
         new InjectableValues.Std()
             .addValue(ExprMacroTable.class.getName(), TestExprMacroTable.INSTANCE)
             .addValue(ObjectMapper.class.getName(), mapper)
-            .addValue(DataSegment.PruneLoadSpecHolder.class, DataSegment.PruneLoadSpecHolder.DEFAULT)
     );
     return mapper;
   }
@@ -100,7 +104,7 @@ public class TestHelper
 
   public static <T> void assertExpectedResults(Iterable<Result<T>> expectedResults, Sequence<Result<T>> results)
   {
-    assertResults(expectedResults, results.toList(), "");
+    assertResults(expectedResults, Sequences.toList(results, Lists.<Result<T>>newArrayList()), "");
   }
 
   public static <T> void assertExpectedResults(Iterable<Result<T>> expectedResults, Iterable<Result<T>> results)
@@ -124,7 +128,7 @@ public class TestHelper
 
   public static <T> void assertExpectedObjects(Iterable<T> expectedResults, Sequence<T> results, String failMsg)
   {
-    assertObjects(expectedResults, results.toList(), failMsg);
+    assertObjects(expectedResults, Sequences.toList(results, Lists.<T>newArrayList()), failMsg);
   }
 
   private static <T> void assertResults(

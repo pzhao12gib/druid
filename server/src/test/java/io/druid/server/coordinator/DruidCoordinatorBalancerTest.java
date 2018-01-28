@@ -222,7 +222,7 @@ public class DruidCoordinatorBalancerTest
     )
         .withBalancerStrategy(predefinedPickOrderStrategy)
         .withDynamicConfigs(
-            CoordinatorDynamicConfig.builder().withMaxSegmentsToMove(
+            new CoordinatorDynamicConfig.Builder().withMaxSegmentsToMove(
                 2
             ).build()
         )
@@ -304,7 +304,7 @@ public class DruidCoordinatorBalancerTest
         )
         .withAvailableSegments(segments.values())
         .withDynamicConfigs(
-            CoordinatorDynamicConfig.builder().withMaxSegmentsToMove(
+            new CoordinatorDynamicConfig.Builder().withMaxSegmentsToMove(
                 MAX_SEGMENTS_TO_MOVE
             ).build()
         )
